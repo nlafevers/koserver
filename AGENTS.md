@@ -10,3 +10,9 @@ There are no documents yet related to deployment.  This section will need to be 
 
 ## Git
 Changes to documentation files in the KOSERVER project root must be commited to the KOSERVER repository.  Any KOPDS or KOSYNC code or documentation changes must be commited to their own separate repositories.
+
+## KOPDS Project Context
+@./kopds/AGENTS.md
+
+## KOSYNC Project Context
+@./kosync/AGENTS.md
