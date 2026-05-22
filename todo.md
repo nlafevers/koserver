@@ -4,6 +4,12 @@ At the beginning of work on each step, prior to making any changes to any code, 
 
 
 
+## Testing
+
+- [ ] Develop a procedure for testing the storage cap for both KOPDS and KOSYNC.
+- [ ] Develop a procedure for testing that progress updates (`PUT`) in KOSYNC with newer timestamps override, but older timestamps do not.
+
+
 ## HTTP Routing
 
 - [ ] Current status: KOPDS uses `go-chi/chi/v5` and KOSYNC uses `net/http.ServeMux`.  Desired outcome: both KOPDS and KOSYNC use the same http routing, and since minimizng dependencies is preferred, that should be the standard Go router that KOSYNC uses unless there is some reason KOPDS cannot be refactored to use it.  Additional tasks: update the `README.md` for both KOPDS and KOSYNC to reflect any changes made in this step.
