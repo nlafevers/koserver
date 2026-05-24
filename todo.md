@@ -12,55 +12,37 @@ At the beginning of work on each step, prior to making any changes to any code, 
 
 ## HTTP Routing
 
-Refactor KOPDS to use `net/http.ServeMux` instead of `go-chi/chi/v5` to align with KOSYNC's approach and minimize external dependencies.
-
-### Phase 1: Preparation and Dependency Removal
-
-- [x] **9.1 Remove chi dependency from KOPDS go.mod**: Delete the `github.com/go-chi/chi/v5` import and run `go mod tidy` in the `kopds` directory.
-- [x] **9.2 Remove chi imports from KOPDS code**: Remove all `import` statements for `github.com/go-chi/chi/v5` and `github.com/go-chi/chi/v5/middleware` across the codebase.
-
-### Phase 2: Router and Middleware Setup
-
-- [x] **9.3 Replace chi.NewRouter() with http.NewServeMux()**: In `kopds/cmd/kopds/main.go`, replace the chi router setup with `mux := http.NewServeMux()` and remove all chi-specific middleware registration (RequestID, RealIP, GetHead, Logger, Recoverer, Timeout).
-- [x] **9.4 Decide on chi middleware replacement strategy**: Determine which chi middleware to replicate or remove:
-  - `RequestID`: Optional; can be removed (not critical for KOPDS)
-  - `Logger`: Optional; chi's automatic logging can be removed (KOPDS has explicit slog logging in handlers)
-  - `Recoverer`: Optional; can be removed (Go's default panic handling is acceptable)
-  - `Timeout`: Replace with per-handler `context.WithTimeout` if needed
-  - Recommendation: Remove all for simplicity; KOPDS handlers already use explicit error handling and logging.
-- [x] **9.5 Refactor BasicAuth middleware**: Extract chi-specific BasicAuth middleware from `kopds/internal/api/middleware.go` into a standalone middleware wrapper function that returns an `http.Handler`, similar to how KOSYNC's middleware functions work.
-
-### Phase 3: Route Pattern Replacement
-
-- [x] **9.6 Replace chi.URLParam() with r.PathValue()**: In `kopds/internal/api/handlers.go`, replace all instances of `chi.URLParam(r, "paramName")` with `r.PathValue("paramName")` (native to Go 1.22+).
-- [x] **9.7 Refactor chi.Route() nested routing**: Replace the `r.Route("/opds/v1.2", func(r chi.Router) {...})` pattern with manual route registration:
-  - Manually register each `/opds/v1.2/*` route with the mux
-  - Wrap the protected routes handler with the BasicAuth middleware, similar to how KOSYNC wraps protected routes in `middleware.AuthMiddleware()`
-
-### Phase 4: Route Registration Update
-
-- [x] **9.8 Update route registration in runServer()**: In `kopds/cmd/kopds/main.go`, replace chi-style route registration with `mux.HandleFunc()` calls for both public and protected routes.  Example patterns:
-  - `mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {...})`
-  - `protected := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {...})` for grouped protected routes
-  - Wrap `protected` with BasicAuth middleware before registering with mux
-
-### Phase 5: Testing and Verification
-
-- [x] **9.9 Run KOPDS unit tests**: Execute `cd kopds && go test ./...` to verify all tests pass without chi dependency.
-- [x] **9.10 Run KOPDS integration tests**: Execute `kopds/test/integration_test.sh` to verify the server starts and responds to requests correctly.
-- [x] **9.11 Manual smoke test**: Start KOPDS server and test a few key endpoints manually (e.g., `/health`, `/opds/v1.2/catalog`, `/opds/v1.2/authors`).
-
-### Phase 6: Documentation
-
-- [x] **9.12 Update KOPDS README**: Document that KOPDS now uses `net/http.ServeMux` and remove any chi-specific setup instructions.
-- [x] **9.13 Update KOSYNC README**: Document that KOSYNC also uses `net/http.ServeMux`, making the HTTP routing consistent across both projects.
-- [x] **9.14 Update uniformity notes**: Add a note in `kopds/UNIFORMITY.md` or `kosync/UNIFORMITY.md` documenting HTTP routing uniformity as complete.
+- [x] **Refactor KOPDS HTTP routing to use `net/http.ServeMux`**: Removed chi dependency from KOPDS and refactored all routing to use stdlib `net/http.ServeMux` to align with KOSYNC. Changes include: removed `github.com/go-chi/chi/v5` from go.mod; replaced `chi.NewRouter()` with `http.NewServeMux()`; replaced all `chi.URLParam(r, "param")` calls with `r.PathValue("param")`; refactored nested routing with manual route registration and middleware wrapping; removed chi-specific middleware (RequestID, RealIP, GetHead, Logger, Recoverer, Timeout); refactored BasicAuth middleware to work with stdlib http handlers; updated both KOPDS and KOSYNC READMEs to document uniform use of `net/http.ServeMux`. All unit tests and integration tests pass.
 
 
 
-## User Management 
+## User Management
 
-- [ ] Current behavior: `create-user` overwrites/updates an existing user for both KOPDS and KOSYNC.  Desired behavior: `create-user` fails if the user already exists for both KOPDS and KOSYNC.  Additional tasks: update usage documentation in the `README.md` for both KOPDS and KOSYNC if, and only if, the overwrite/update functionality is currently mentioned.
+Current behavior: `create-user` overwrites/updates an existing user for both KOPDS and KOSYNC.  Desired behavior: `create-user` fails if the user already exists for both KOPDS and KOSYNC.  Additional tasks: update usage documentation in the `README.md` for both KOPDS and KOSYNC if, and only if, the overwrite/update functionality is currently mentioned.
+
+### PRepository/Storage Layer Updates
+
+- [ ] **1. Add CreateUserIfNotExists() to KOPDS UserRepository**: In `kopds/internal/database/user_repository.go`, add a new method `CreateUserIfNotExists(ctx context.Context, user *domain.User) error` that checks for existing user before inserting, returning an error (e.g., "user already exists") if the user is found. Keep the existing `Save()` method unchanged for backwards compatibility.
+- [ ] **2. Add CreateUserIfNotExists() to KOSYNC Storage**: In `kosync/internal/database/sqlite.go`, add a new method `CreateUserIfNotExists(username, password string) error` that checks for existing user before inserting, returning an error (e.g., "user already exists") if the user is found. Keep the existing `SaveUser()` method unchanged for backwards compatibility.
+
+### Phase 2: CLI Updates
+
+- [ ] **3. Update KOPDS createUser() CLI function**: Modify `kopds/cmd/kopds/main.go` `createUser()` to call the new `CreateUserIfNotExists()` method. Handle the "user already exists" error with appropriate log message and stdout message (e.g., "Error: User 'username' already exists").
+- [ ] **4. Update KOSYNC createUser() CLI function**: Modify `kosync/cmd/kosync/main.go` `createUser()` to call the new `CreateUserIfNotExists()` method. Handle the "user already exists" error with appropriate log message and stdout message (e.g., "Error: User 'username' already exists").
+- [ ] **5. Standardize success message**: Ensure both KOPDS and KOSYNC print identical success messages for `create-user` (e.g., "User 'username' created successfully." without "/updated").
+
+### Phase 3: Test Updates
+
+- [ ] **6. Add KOPDS test for duplicate user creation**: In `kopds/cmd/kopds/main_test.go`, add a test case that attempts to create a user twice and verifies the second attempt fails with appropriate error message and non-zero exit code.
+- [ ] **7. Add KOSYNC test for duplicate user creation**: In `kosync/cmd/kosync/main_test.go`, add a test case that attempts to create a user twice and verifies the second attempt fails with appropriate error message and non-zero exit code.
+- [ ] **8. Run KOPDS tests**: Execute `cd kopds && go test ./...` to verify all tests pass including the new user creation tests.
+- [ ] **9. Run KOSYNC tests**: Execute `cd kosync && go test ./...` to verify all tests pass including the new user creation tests.
+
+### Phase 4: Documentation
+
+- [ ] **10. Check KOPDS README for create-user documentation**: Review `kopds/README.md` and update the `create-user` command documentation to clarify that the command fails if the user already exists and only succeeds if the user is new. Remove any mention of "overwrite" or "update" behavior for `create-user`.
+- [ ] **11. Check KOSYNC README for create-user documentation**: Review `kosync/README.md` and update the `create-user` command documentation to clarify that the command fails if the user already exists and only succeeds if the user is new. Remove any mention of "overwrite" or "update" behavior for `create-user`.
+- [ ] **12. Update uniformity notes**: Add a note documenting that both KOPDS and KOSYNC now have identical `create-user` behavior: fail if user exists, succeed only for new users.
 
 
 
