@@ -78,8 +78,8 @@ At the beginning of work on each step, prior to making any changes to any code, 
 - [x] **6.1 Standardize CLI Dispatch**: Make `runCLI`, `printUsage`, `passwordFromArgs`, and `readPasswordInteractively` identical by using an `appName` constant and command-specific action functions.
 - [x] **6.2 Standardize CLI Database Behavior**: Remove KOSYNC's requirement that the database already exist before user-management commands; CLI database creation should match KOPDS.
 - [x] **6.3 Standardize CLI Output**: Remove KOSYNC's `Using database:` and `Using log:` lines so both projects print the same style of command result and errors.
-- [x] **6.4 Standardize CLI User Operations**: Expose identical CLI-facing `SaveUser`, `DeleteUser`, and `UpdatePassword` behavior in both projects; `create-user` should upsert in both projects.
-- [x] **6.5 Expand CLI Tests**: Test exact stdout/stderr behavior, database auto-creation, duplicate create/update behavior, delete, change-password, and missing-user failures in both projects.
+- [x] **6.4 Standardize CLI User Operations**: Expose identical CLI-facing `SaveUser`, `DeleteUser`, and `UpdatePassword` behavior in both projects; `create-user` should fail if the user already exists in both projects.
+- [x] **6.5 Expand CLI Tests**: Test exact stdout/stderr behavior, database auto-creation, duplicate create failure behavior, delete, change-password, and missing-user failures in both projects.
 
 ### Phase 7: Dependency, Deployment, and Integration Parity
 
