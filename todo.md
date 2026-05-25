@@ -18,31 +18,7 @@ At the beginning of work on each step, prior to making any changes to any code, 
 
 ## User Management
 
-Current behavior: `create-user` overwrites/updates an existing user for both KOPDS and KOSYNC.  Desired behavior: `create-user` fails if the user already exists for both KOPDS and KOSYNC.  Additional tasks: update usage documentation in the `README.md` for both KOPDS and KOSYNC if, and only if, the overwrite/update functionality is currently mentioned.
-
-### Phase 1: Prepository/Storage Layer Updates
-
-- [x] **1. Add CreateUserIfNotExists() to KOPDS UserRepository**: In `kopds/internal/database/user_repository.go`, add a new method `CreateUserIfNotExists(ctx context.Context, user *domain.User) error` that checks for existing user before inserting, returning an error (e.g., "user already exists") if the user is found. Keep the existing `Save()` method unchanged for backwards compatibility.
-- [x] **2. Add CreateUserIfNotExists() to KOSYNC Storage**: In `kosync/internal/database/sqlite.go`, add a new method `CreateUserIfNotExists(username, password string) error` that checks for existing user before inserting, returning an error (e.g., "user already exists") if the user is found. Keep the existing `SaveUser()` method unchanged for backwards compatibility.
-
-### Phase 2: CLI Updates
-
-- [x] **3. Update KOPDS createUser() CLI function**: Modify `kopds/cmd/kopds/main.go` `createUser()` to call the new `CreateUserIfNotExists()` method. Handle the "user already exists" error with appropriate log message and stdout message (e.g., "Error: User 'username' already exists").
-- [x] **4. Update KOSYNC createUser() CLI function**: Modify `kosync/cmd/kosync/main.go` `createUser()` to call the new `CreateUserIfNotExists()` method. Handle the "user already exists" error with appropriate log message and stdout message (e.g., "Error: User 'username' already exists").
-- [x] **5. Standardize success message**: Ensure both KOPDS and KOSYNC print identical success messages for `create-user` (e.g., "User 'username' created successfully." without "/updated").
-
-### Phase 3: Test Updates
-
-- [x] **6. Add KOPDS test for duplicate user creation**: In `kopds/cmd/kopds/main_test.go`, add a test case that attempts to create a user twice and verifies the second attempt fails with appropriate error message and non-zero exit code.
-- [x] **7. Add KOSYNC test for duplicate user creation**: In `kosync/cmd/kosync/main_test.go`, add a test case that attempts to create a user twice and verifies the second attempt fails with appropriate error message and non-zero exit code.
-- [x] **8. Run KOPDS tests**: Execute `cd kopds && go test ./...` to verify all tests pass including the new user creation tests.
-- [x] **9. Run KOSYNC tests**: Execute `cd kosync && go test ./...` to verify all tests pass including the new user creation tests.
-
-### Phase 4: Documentation
-
-- [x] **10. Check KOPDS README for create-user documentation**: Review `kopds/README.md` and update the `create-user` command documentation to clarify that the command fails if the user already exists and only succeeds if the user is new. Remove any mention of "overwrite" or "update" behavior for `create-user`.
-- [x] **11. Check KOSYNC README for create-user documentation**: Review `kosync/README.md` and update the `create-user` command documentation to clarify that the command fails if the user already exists and only succeeds if the user is new. Remove any mention of "overwrite" or "update" behavior for `create-user`.
-- [x] **12. Update uniformity notes**: Add a note documenting that both KOPDS and KOSYNC now have identical `create-user` behavior: fail if user exists, succeed only for new users.
+- [x] **Refactor `create-user` to prevent overwriting existing users**: Standardized `create-user` behavior across KOPDS and KOSYNC to fail if a user already exists. Changes include: implemented `CreateUserIfNotExists` in both storage layers; updated CLI entrypoints to handle the "user already exists" error with standardized log and stdout messages; standardized success messages to "User 'username' created successfully."; updated CLI tests in both projects to verify failure and non-zero exit codes for duplicate creation; updated READMEs to reflect the new behavior and refer users to `change-password` for updates; and updated uniformity documentation. All tests pass.
 
 
 
