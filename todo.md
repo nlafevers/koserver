@@ -22,27 +22,27 @@ Current behavior: `create-user` overwrites/updates an existing user for both KOP
 
 ### Phase 1: Prepository/Storage Layer Updates
 
-- [ ] **1. Add CreateUserIfNotExists() to KOPDS UserRepository**: In `kopds/internal/database/user_repository.go`, add a new method `CreateUserIfNotExists(ctx context.Context, user *domain.User) error` that checks for existing user before inserting, returning an error (e.g., "user already exists") if the user is found. Keep the existing `Save()` method unchanged for backwards compatibility.
-- [ ] **2. Add CreateUserIfNotExists() to KOSYNC Storage**: In `kosync/internal/database/sqlite.go`, add a new method `CreateUserIfNotExists(username, password string) error` that checks for existing user before inserting, returning an error (e.g., "user already exists") if the user is found. Keep the existing `SaveUser()` method unchanged for backwards compatibility.
+- [x] **1. Add CreateUserIfNotExists() to KOPDS UserRepository**: In `kopds/internal/database/user_repository.go`, add a new method `CreateUserIfNotExists(ctx context.Context, user *domain.User) error` that checks for existing user before inserting, returning an error (e.g., "user already exists") if the user is found. Keep the existing `Save()` method unchanged for backwards compatibility.
+- [x] **2. Add CreateUserIfNotExists() to KOSYNC Storage**: In `kosync/internal/database/sqlite.go`, add a new method `CreateUserIfNotExists(username, password string) error` that checks for existing user before inserting, returning an error (e.g., "user already exists") if the user is found. Keep the existing `SaveUser()` method unchanged for backwards compatibility.
 
 ### Phase 2: CLI Updates
 
-- [ ] **3. Update KOPDS createUser() CLI function**: Modify `kopds/cmd/kopds/main.go` `createUser()` to call the new `CreateUserIfNotExists()` method. Handle the "user already exists" error with appropriate log message and stdout message (e.g., "Error: User 'username' already exists").
-- [ ] **4. Update KOSYNC createUser() CLI function**: Modify `kosync/cmd/kosync/main.go` `createUser()` to call the new `CreateUserIfNotExists()` method. Handle the "user already exists" error with appropriate log message and stdout message (e.g., "Error: User 'username' already exists").
-- [ ] **5. Standardize success message**: Ensure both KOPDS and KOSYNC print identical success messages for `create-user` (e.g., "User 'username' created successfully." without "/updated").
+- [x] **3. Update KOPDS createUser() CLI function**: Modify `kopds/cmd/kopds/main.go` `createUser()` to call the new `CreateUserIfNotExists()` method. Handle the "user already exists" error with appropriate log message and stdout message (e.g., "Error: User 'username' already exists").
+- [x] **4. Update KOSYNC createUser() CLI function**: Modify `kosync/cmd/kosync/main.go` `createUser()` to call the new `CreateUserIfNotExists()` method. Handle the "user already exists" error with appropriate log message and stdout message (e.g., "Error: User 'username' already exists").
+- [x] **5. Standardize success message**: Ensure both KOPDS and KOSYNC print identical success messages for `create-user` (e.g., "User 'username' created successfully." without "/updated").
 
 ### Phase 3: Test Updates
 
-- [ ] **6. Add KOPDS test for duplicate user creation**: In `kopds/cmd/kopds/main_test.go`, add a test case that attempts to create a user twice and verifies the second attempt fails with appropriate error message and non-zero exit code.
-- [ ] **7. Add KOSYNC test for duplicate user creation**: In `kosync/cmd/kosync/main_test.go`, add a test case that attempts to create a user twice and verifies the second attempt fails with appropriate error message and non-zero exit code.
-- [ ] **8. Run KOPDS tests**: Execute `cd kopds && go test ./...` to verify all tests pass including the new user creation tests.
-- [ ] **9. Run KOSYNC tests**: Execute `cd kosync && go test ./...` to verify all tests pass including the new user creation tests.
+- [x] **6. Add KOPDS test for duplicate user creation**: In `kopds/cmd/kopds/main_test.go`, add a test case that attempts to create a user twice and verifies the second attempt fails with appropriate error message and non-zero exit code.
+- [x] **7. Add KOSYNC test for duplicate user creation**: In `kosync/cmd/kosync/main_test.go`, add a test case that attempts to create a user twice and verifies the second attempt fails with appropriate error message and non-zero exit code.
+- [x] **8. Run KOPDS tests**: Execute `cd kopds && go test ./...` to verify all tests pass including the new user creation tests.
+- [x] **9. Run KOSYNC tests**: Execute `cd kosync && go test ./...` to verify all tests pass including the new user creation tests.
 
 ### Phase 4: Documentation
 
-- [ ] **10. Check KOPDS README for create-user documentation**: Review `kopds/README.md` and update the `create-user` command documentation to clarify that the command fails if the user already exists and only succeeds if the user is new. Remove any mention of "overwrite" or "update" behavior for `create-user`.
-- [ ] **11. Check KOSYNC README for create-user documentation**: Review `kosync/README.md` and update the `create-user` command documentation to clarify that the command fails if the user already exists and only succeeds if the user is new. Remove any mention of "overwrite" or "update" behavior for `create-user`.
-- [ ] **12. Update uniformity notes**: Add a note documenting that both KOPDS and KOSYNC now have identical `create-user` behavior: fail if user exists, succeed only for new users.
+- [x] **10. Check KOPDS README for create-user documentation**: Review `kopds/README.md` and update the `create-user` command documentation to clarify that the command fails if the user already exists and only succeeds if the user is new. Remove any mention of "overwrite" or "update" behavior for `create-user`.
+- [x] **11. Check KOSYNC README for create-user documentation**: Review `kosync/README.md` and update the `create-user` command documentation to clarify that the command fails if the user already exists and only succeeds if the user is new. Remove any mention of "overwrite" or "update" behavior for `create-user`.
+- [x] **12. Update uniformity notes**: Add a note documenting that both KOPDS and KOSYNC now have identical `create-user` behavior: fail if user exists, succeed only for new users.
 
 
 
