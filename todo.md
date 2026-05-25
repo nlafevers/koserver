@@ -20,7 +20,7 @@ At the beginning of work on each step, prior to making any changes to any code, 
 
 Current behavior: `create-user` overwrites/updates an existing user for both KOPDS and KOSYNC.  Desired behavior: `create-user` fails if the user already exists for both KOPDS and KOSYNC.  Additional tasks: update usage documentation in the `README.md` for both KOPDS and KOSYNC if, and only if, the overwrite/update functionality is currently mentioned.
 
-### PRepository/Storage Layer Updates
+### Phase 1: Prepository/Storage Layer Updates
 
 - [ ] **1. Add CreateUserIfNotExists() to KOPDS UserRepository**: In `kopds/internal/database/user_repository.go`, add a new method `CreateUserIfNotExists(ctx context.Context, user *domain.User) error` that checks for existing user before inserting, returning an error (e.g., "user already exists") if the user is found. Keep the existing `Save()` method unchanged for backwards compatibility.
 - [ ] **2. Add CreateUserIfNotExists() to KOSYNC Storage**: In `kosync/internal/database/sqlite.go`, add a new method `CreateUserIfNotExists(username, password string) error` that checks for existing user before inserting, returning an error (e.g., "user already exists") if the user is found. Keep the existing `SaveUser()` method unchanged for backwards compatibility.
