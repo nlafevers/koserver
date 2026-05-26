@@ -104,3 +104,7 @@ At the beginning of work on each step, prior to making any changes to any code, 
 - Both projects pass their unit tests.
 - Both integration scripts pass outside sandboxed environments that block local listeners.
 - Documentation reflects the final behavior and no longer describes the old KOSYNC CLI database guard as desired behavior.
+
+## 5. Follow-On Work: Logging Refactor
+
+After completion of the uniformity plan phases, a comprehensive logging refactor is planned. See [logging-plan.md](logging-plan.md) for the detailed strategy. This work standardizes logging coverage and format across both projects to ensure all operations generate appropriate log entries for operational visibility and troubleshooting.

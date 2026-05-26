@@ -24,7 +24,13 @@ At the beginning of work on each step, prior to making any changes to any code, 
 
 ## Logging
 
-- [ ] Develop a matrix or table showing all possible commands/requests/inputs and what log level is expected for it for both KOPDS and KOSYNC
-- [ ] Current behavior: when deployed as a Docker container with `LOG_LEVEL=INFO`, `docker logs -f <app>` does not show entries for CLI user management events.  Desired behavior: when deployed as a Docker container, `docker logs -f <app>` does show entries for CLI user management events.
-- [ ] Current behavior: when deployed as a Docker container with `LOG_LEVEL=INFO` or `LOG_LEVEL=DEBUG`, KOSYNC does display successful progress updates (`PUT`) but does not display successful get progress requests (`GET`)(unsuccessful updates and requests are both logged).  Desired behavior: when deployed as a Docker container with `LOG_LEVEL=INFO` of `LOG_LEVEL=DEBUG`, KOSYNC does display both successful and unsuccessful progress updates (`PUT`) and get progress requests (`GET`).
-- [ ] Current behavior: when deployed as a Docker container with `LOG_LEVEL=INFO`, KOSYNC does not display every successful HTTP request, but KOPDS does (in a different format than the other log entries).  What is KOPDS doing differently, and why do the entries of HTTP requests appear in a different format than entries for starting up the container or creating a new user?
+See [logging-plan.md](logging-plan.md) for the comprehensive refactoring plan.  This section tracks implementation progress from that plan.
+
+- [ ] **Phase 1**: Add HTTP Request/Response Logging Middleware
+- [ ] **Phase 2**: Standardize CLI Operation Logging
+- [ ] **Phase 3**: Standardize API Operation Logging (Handlers)
+- [ ] **Phase 4**: Standardize Startup/Shutdown Logging
+- [ ] **Phase 5**: Standardize Service/Repository Layer Logging
+- [ ] **Phase 6**: Storage Cap and Maintenance Logging
+- [ ] **Phase 7**: Integration Testing and Documentation
+- [ ] **Phase 8**: Final Verification
