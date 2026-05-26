@@ -67,10 +67,11 @@ At the beginning of work on each step, prior to making any changes to any code, 
   - wraps `http.ResponseWriter` to capture status code, response size, and error body for 5xx responses,
   - logs completed requests at INFO level (2xx/3xx) with method, path, status_code, duration, and user (if auth'd),
   - logs client errors at WARN and server errors at ERROR, with full response/error context,
-  - emits DEBUG-level logs for detailed response diagnostics.
+  - emits DEBUG-level logs for detailed response diagnostics,
+  - is applied as the outermost middleware around the final router so it captures the full request lifecycle, including auth/rate-limiting.
 - [ ] **1.2 Standardize Request Context**: Update both KOPDS and KOSYNC auth middleware to store authenticated username in the request context using shared context key constants.
-- [ ] **1.3 Implement Logging Middleware in KOPDS**: Extend `internal/api/middleware.go` to add `LoggingMiddleware`; apply middleware to all routes in `main.go`.
-- [ ] **1.4 Implement Logging Middleware in KOSYNC**: Create `internal/api/middleware.go` with identical `LoggingMiddleware`; apply middleware to all routes in `main.go`.
+- [ ] **1.3 Implement Logging Middleware in KOPDS**: Extend `internal/api/middleware.go` to add `LoggingMiddleware`; apply middleware as the outermost wrapper around the final mux in `main.go`.
+- [ ] **1.4 Implement Logging Middleware in KOSYNC**: Create `internal/api/middleware.go` with identical `LoggingMiddleware`; apply middleware as the outermost wrapper around the final mux in `main.go`.
 - [ ] **1.5 Test Logging Middleware**: Add unit tests verifying correct log output for various HTTP status codes and request types, request_id correlation across logs, request-scoped logger propagation, and 5xx error capture.
 
 ### Phase 2: Standardize CLI Operation Logging
