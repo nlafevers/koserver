@@ -22,10 +22,10 @@ Define expected log levels for all major event types:
 
 | Operation Class | Event | Severity | Level | Required Fields |
 |---|---|---|---|---|
-| **HTTP Requests** | Request received | Business | INFO | method, path, remote_addr, user (if auth'd) |
-| **HTTP Requests** | Successful response | Business | DEBUG | method, path, status_code, response_time_ms |
-| **HTTP Requests** | Client error (4xx) | Problem | WARN | method, path, status_code, error_reason |
-| **HTTP Requests** | Server error (5xx) | Problem | ERROR | method, path, status_code, error_detail |
+| **HTTP Requests** | Request completed (2xx/3xx) | Business | INFO | method, path, status_code, duration, user (if auth'd) |
+| **HTTP Requests** | Detailed response info | Diagnostic | DEBUG | method, path, status_code, duration, response_size, user (if auth'd) |
+| **HTTP Requests** | Client error (4xx) | Problem | WARN | method, path, status_code, duration, error_reason |
+| **HTTP Requests** | Server error (5xx) | Problem | ERROR | method, path, status_code, duration, error_detail |
 | **Authentication** | Successful auth | Business | DEBUG | username, auth_method |
 | **Authentication** | Auth failure | Problem | WARN | username, reason, remote_addr |
 | **User Management (CLI)** | User created | Success | INFO | username, source (CLI) |
@@ -37,7 +37,7 @@ Define expected log levels for all major event types:
 | **User Management (API)** | Registration attempt | Business | DEBUG | username, source (API) |
 | **User Management (API)** | Duplicate registration | Problem | WARN | username, source (API) |
 | **Data Operations (KOPDS)** | Book scan started | Business | INFO | library_path, scan_type |
-| **Data Operations (KOPDS)** | Book scan completed | Success | INFO | library_path, books_found, scan_time_ms |
+| **Data Operations (KOPDS)** | Book scan completed | Success | INFO | library_path, books_found, duration |
 | **Data Operations (KOPDS)** | Book scan failed | Failure | ERROR | library_path, error_detail |
 | **Data Operations (KOSYNC)** | Progress retrieved | Business | DEBUG | username, document, timestamp |
 | **Data Operations (KOSYNC)** | Progress updated | Business | INFO | username, document, percentage, timestamp |
@@ -59,16 +59,16 @@ At the beginning of work on each step, prior to making any changes to any code, 
 
 **Objective**: Standardize HTTP request/response logging across both projects with identical middleware.
 
-- [ ] **1.1 Design Logging Middleware**: Create `LoggingMiddleware` for stdlib `net/http.ServeMux` that logs all requests at DEBUG level with method, path, remote_addr, user (if present); logs responses at DEBUG (2xx/3xx), WARN (4xx), ERROR (5xx) with status code and response time.
-- [ ] **1.2 Implement Logging Middleware in KOPDS**: Add `internal/api/logging.go` with `LoggingMiddleware` implementation; apply middleware to all routes in `main.go`.
-- [ ] **1.3 Implement Logging Middleware in KOSYNC**: Add `internal/middleware/logging.go` (or extend existing) with identical `LoggingMiddleware`; apply middleware to all routes in `main.go`.
+- [ ] **1.1 Design Logging Middleware**: Create `LoggingMiddleware` for stdlib `net/http.ServeMux` that wraps all HTTP handlers and logs completed requests at INFO level (2xx/3xx) with method, path, status_code, duration, and user (if auth'd); logs client errors (4xx) at WARN and server errors (5xx) at ERROR with full error context. Include DEBUG-level logging with detailed response diagnostics.
+- [ ] **1.2 Implement Logging Middleware in KOPDS**: Extend `internal/api/middleware.go` to add `LoggingMiddleware` implementation; apply middleware to all routes in `main.go`.
+- [ ] **1.3 Implement Logging Middleware in KOSYNC**: Create `internal/api/middleware.go` with identical `LoggingMiddleware` implementation; apply middleware to all routes in `main.go`.
 - [ ] **1.4 Test Logging Middleware**: Add unit tests verifying correct log output for various HTTP status codes and request types; verify response times are captured accurately.
 
 ### Phase 2: Standardize CLI Operation Logging
 
 **Objective**: Ensure all CLI operations (create-user, delete-user, change-password) log at INFO level on success and WARN level on failure.
 
-- [ ] **2.1 Create CLI Logging Helpers**: Add `internal/api/cli_logger.go` (or similar) with standardized functions: `LogCLISuccess(operation, username string)`, `LogCLIFailure(operation, username, reason string)`, `LogCLIInput(operation string)`.
+- [ ] **2.1 Create CLI Logging Helpers**: Add `internal/logger/cli.go` in both projects with standardized functions: `LogCLISuccess(logger *slog.Logger, operation, username string)`, `LogCLIFailure(logger *slog.Logger, operation, username, reason string)`. Helpers include `source="CLI"` field in all logs.
 - [ ] **2.2 Implement KOPDS CLI Logging**: Refactor `cmd/kopds/main.go` user-management functions to call logging helpers; ensure all success and failure paths log at appropriate levels.
 - [ ] **2.3 Implement KOSYNC CLI Logging**: Refactor `cmd/kosync/main.go` user-management functions to call identical logging helpers; ensure all success and failure paths log at appropriate levels.
 - [ ] **2.4 Test CLI Logging**: Add tests verifying exact log output (level and message) for success/failure of create, delete, and change-password operations; verify source="CLI" tag is present.
@@ -127,17 +127,19 @@ At the beginning of work on each step, prior to making any changes to any code, 
 - [ ] **8.2 Uniformity Audit**: Compare log output from equivalent operations in both projects; document any intentional differences and justify them.
 - [ ] **8.3 Run All Tests**: Execute `go test ./...` in both projects; ensure all logging tests pass.
 - [ ] **8.4 Performance Check**: Verify logging does not introduce measurable performance degradation; check logging middleware response times.
-- [ ] **8.5 Final Documentation**: Update [uniformity-plan.md](uniformity-plan.md) to reflect logging standardization completion; update [todo.md](todo.md) to mark all logging TODOs as complete.
+- [ ] **8.5 Update AGENTS.md Files**: Update `kopds/AGENTS.md` and `kosync/AGENTS.md` to replace references to `rs/zerolog` with `log/slog` and document the logging strategy for both projects.
+- [ ] **8.6 Final Documentation**: Update [uniformity-plan.md](uniformity-plan.md) to reflect logging standardization completion; update [todo.md](todo.md) to mark all logging TODOs as complete.
 
 ## Logging Implementation Guidelines
 
 ### Consistent Field Names
 
 Use identical field names across both projects:
-- HTTP request: `method`, `path`, `remote_addr`, `user` (if auth'd), `status_code`, `response_time_ms`
+- HTTP request: `method`, `path`, `remote_addr`, `user` (if auth'd), `status_code`, `duration` (as `slog.Duration`)
 - User operations: `username`, `operation`, `reason`, `source` ("CLI" or "API")
 - Data operations: `document` (KOSYNC), `book` (KOPDS), `percentage` (KOSYNC), etc.
 - Errors: `error` (error message), `error_detail` (full error stack or context)
+- Timing: Use `slog.Duration` type with field name `duration` (slog handles formatting for both text and JSON output)
 
 ### Log Message Style
 
@@ -164,7 +166,7 @@ slog.Info("operation completed")
 
 ## Success Criteria
 
-1. Every HTTP request/response logs at appropriate level (DEBUG for success, WARN/ERROR for failures)
+1. Every HTTP request/response completion logs at INFO level (2xx/3xx) with status code and duration; 4xx logs at WARN, 5xx at ERROR; DEBUG level provides detailed diagnostic information
 2. Every CLI operation logs success at INFO level and failure at WARN level
 3. Every data operation (user create, progress update, book scan) logs success at INFO level and failure at ERROR level
 4. Logs are identical in format and content for equivalent operations across KOPDS and KOSYNC
