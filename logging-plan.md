@@ -59,10 +59,19 @@ At the beginning of work on each step, prior to making any changes to any code, 
 
 **Objective**: Standardize HTTP request/response logging across both projects with identical middleware.
 
-- [ ] **1.1 Design Logging Middleware**: Create `LoggingMiddleware` for stdlib `net/http.ServeMux` that wraps all HTTP handlers and logs completed requests at INFO level (2xx/3xx) with method, path, status_code, duration, and user (if auth'd); logs client errors (4xx) at WARN and server errors (5xx) at ERROR with full error context. Include DEBUG-level logging with detailed response diagnostics.
-- [ ] **1.2 Implement Logging Middleware in KOPDS**: Extend `internal/api/middleware.go` to add `LoggingMiddleware` implementation; apply middleware to all routes in `main.go`.
-- [ ] **1.3 Implement Logging Middleware in KOSYNC**: Create `internal/api/middleware.go` with identical `LoggingMiddleware` implementation; apply middleware to all routes in `main.go`.
-- [ ] **1.4 Test Logging Middleware**: Add unit tests verifying correct log output for various HTTP status codes and request types; verify response times are captured accurately.
+- [ ] **1.0 Rebase KOSYNC Middleware**: Move KOSYNC middleware from `internal/middleware/middleware.go` to `internal/api/middleware.go`, remove or retire the old `internal/middleware` package, and keep the package layout identical to KOPDS.
+- [ ] **1.1 Design Logging Middleware**: Create `LoggingMiddleware` for stdlib `net/http.ServeMux` that:
+  - generates a unique `request_id` for each request,
+  - creates a request-scoped logger with `method`, `path`, and `request_id`,
+  - stores the request-scoped logger and authenticated username in context,
+  - wraps `http.ResponseWriter` to capture status code, response size, and error body for 5xx responses,
+  - logs completed requests at INFO level (2xx/3xx) with method, path, status_code, duration, and user (if auth'd),
+  - logs client errors at WARN and server errors at ERROR, with full response/error context,
+  - emits DEBUG-level logs for detailed response diagnostics.
+- [ ] **1.2 Standardize Request Context**: Update both KOPDS and KOSYNC auth middleware to store authenticated username in the request context using shared context key constants.
+- [ ] **1.3 Implement Logging Middleware in KOPDS**: Extend `internal/api/middleware.go` to add `LoggingMiddleware`; apply middleware to all routes in `main.go`.
+- [ ] **1.4 Implement Logging Middleware in KOSYNC**: Create `internal/api/middleware.go` with identical `LoggingMiddleware`; apply middleware to all routes in `main.go`.
+- [ ] **1.5 Test Logging Middleware**: Add unit tests verifying correct log output for various HTTP status codes and request types, request_id correlation across logs, request-scoped logger propagation, and 5xx error capture.
 
 ### Phase 2: Standardize CLI Operation Logging
 
@@ -140,6 +149,8 @@ Use identical field names across both projects:
 - Data operations: `document` (KOSYNC), `book` (KOPDS), `percentage` (KOSYNC), etc.
 - Errors: `error` (error message), `error_detail` (full error stack or context)
 - Timing: Use `slog.Duration` type with field name `duration` (slog handles formatting for both text and JSON output)
+- Context keys: define explicit context key constants such as `ContextKeyRequestID`, `ContextKeyUser`, and `ContextKeyLogger` in a shared internal package or identical file in both projects to avoid magic string bugs.
+
 
 ### Log Message Style
 
