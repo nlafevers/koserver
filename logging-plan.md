@@ -159,9 +159,32 @@ At the beginning of work on each step, prior to making any changes to any code, 
 
 **Objective**: Verify logging works correctly in real scenarios and document for operators.
 
-- [ ] **7.1 Create Logging Test Matrix**: Add an explicit matrix of logging scenarios and expected outputs.
+- [~] **7.1 Create Logging Test Matrix**: Add an explicit matrix of logging scenarios and expected outputs.
   - Update `logging-plan.md` with a table covering startup, CLI, authentication, progress operations, storage-cap enforcement, and shutdown for both text and JSON log formats.
   - Use the existing `internal/*_test.go` files and integration scripts as the execution targets for those matrix entries.
+
+#### 7.1 Logging Test Matrix
+
+| Scenario | Project | Command / Test | Expected Log Level | Key Fields | Notes |
+|---|---|---|---|---|---|
+| App startup | KOPDS | `go test ./cmd/kopds` / manual startup | INFO | `app_name`, `port`, `database_path`, `log_level`, `json_log` | Should appear before any request or CLI operation logs |
+| App startup | KOSYNC | `go test ./cmd/kosync` / manual startup | INFO | `app_name`, `port`, `database_path`, `log_level`, `json_log` | Same format as KOPDS |
+| CLI create user success | KOPDS | `cmd/kopds/main_test.go` | INFO | `username`, `operation`, `source`, `status` | `source=CLI` |
+| CLI create user failure | KOPDS | `cmd/kopds/main_test.go` | WARN | `username`, `operation`, `source`, `reason` | duplicate user or invalid input |
+| CLI change password success | KOPDS | `cmd/kopds/main_test.go` | INFO | `username`, `operation`, `source` | |
+| CLI delete user success | KOPDS | `cmd/kopds/main_test.go` | INFO | `username`, `operation`, `source` | |
+| CLI create user success | KOSYNC | `cmd/kosync/main_test.go` | INFO | `username`, `operation`, `source` | If supported by CLI tests |
+| Handler request success | KOPDS | `internal/api` tests or integration | INFO | `method`, `path`, `status_code`, `duration`, `request_id` | 2xx/3xx response |
+| Handler request client error | KOPDS | `internal/api` tests | WARN | `method`, `path`, `status_code`, `duration`, `error_reason` | 4xx response |
+| Handler request server error | KOPDS | `internal/api` tests | ERROR | `method`, `path`, `status_code`, `duration`, `error_detail` | 5xx response |
+| Handler request success | KOSYNC | `internal/api` tests or integration | INFO | `method`, `path`, `status_code`, `duration`, `request_id` | Same structure as KOPDS |
+| Storage cap prune | KOPDS | `internal/database/storage_cap_test.go` | WARN / INFO | `database_path`, `rows_deleted`, `freed_mb`, `cap_mb` | Prune summary logged |
+| Storage cap prune | KOSYNC | `internal/database/storage_cap_test.go` | WARN / INFO | `database_path`, `rows_deleted`, `freed_mb`, `cap_mb` | Same fields as KOPDS |
+| Shutdown signal | KOPDS | manual signal test | INFO | `signal_name`, `reason`, `uptime` | graceful shutdown |
+| Shutdown signal | KOSYNC | manual signal test | INFO | `signal_name`, `reason`, `uptime` | graceful shutdown |
+| Auth failure | KOSYNC | `internal/api` auth tests | WARN | `username`, `remote_addr`, `reason` | |
+| Progress update success | KOSYNC | `internal/api` tests | INFO | `username`, `document`, `percentage`, `status` | |
+
 - [ ] **7.2 Run Full Logging Integration Tests**: Execute real logging scenarios in both projects.
   - Run `kopds/test/integration_test.sh` and `kosync/test/integration_test.sh` with `LOG_LEVEL=INFO` and `LOG_LEVEL=DEBUG` to capture operational logs.
   - Validate that request middleware logs, handler logs, CLI logs, and maintenance logs appear at the expected level and field set.
