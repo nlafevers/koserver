@@ -143,11 +143,11 @@ At the beginning of work on each step, prior to making any changes to any code, 
 
 **Objective**: Ensure storage cap enforcement and database maintenance operations log appropriately for operational visibility.
 
-- [ ] **6.1 Add Storage Cap Logging**: Add visibility around database size checks, pruning, and vacuuming.
+- [x] **6.1 Add Storage Cap Logging**: Add visibility around database size checks, pruning, and vacuuming.
   - In `kopds/internal/database/sqlite.go` and `kosync/internal/database/sqlite.go`, log `DEBUG` before each cap check with `database_path`, `current_size_mb`, and `cap_mb`.
   - When the cap is exceeded, log `WARN` before pruning with the number of records targeted, `WARN` when pruning begins, and `INFO` when pruning/recovery completes.
   - Change the prune helpers so they return deleted row counts or another structured summary that can be logged, instead of only returning success/failure.
-- [ ] **6.2 Add Database Maintenance Logging**: Log SQLite maintenance operations with timing and outcome.
+- [x] **6.2 Add Database Maintenance Logging**: Log SQLite maintenance operations with timing and outcome.
   - Wrap `VACUUM` execution in both database packages with `DEBUG` start/end logs and `ERROR` on failure.
   - If checkpoint or WAL maintenance is added, log `DEBUG` around those calls with `duration` measured with `time.Since(...)`.
   - Keep maintenance logs distinct from request-handler logs so operators can separate runtime traffic from database housekeeping.
