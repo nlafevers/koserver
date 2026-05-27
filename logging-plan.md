@@ -124,18 +124,18 @@ At the beginning of work on each step, prior to making any changes to any code, 
 
 **Objective**: Ensure database operations and service-layer actions log appropriately without duplicating HTTP-level logging.
 
-- [ ] **5.1 Review Service Logging Strategy**: Decide on a single pattern for lower layers before coding.
+- [x] **5.1 Review Service Logging Strategy**: Decide on a single pattern for lower layers before coding.
   - Lower layers should log `DEBUG` for query-level diagnostics and `ERROR` for failures, while handlers retain `INFO`-level business success logs.
   - Do not duplicate request-complete logs from middleware; instead, service logs should show query context such as `table`, `operation`, and result counts.
-- [ ] **5.2 Implement Service Logging in KOPDS**: Add query-level logging in the repository/service stack.
+- [x] **5.2 Implement Service Logging in KOPDS**: Add query-level logging in the repository/service stack.
   - In `kopds/internal/database/book_repository.go` and `kopds/internal/database/user_repository.go`, add `DEBUG` logs for lookup, insert, update, and delete operations, and `ERROR` logs when SQL execution fails.
   - In `kopds/internal/service/book_service.go`, log fetch boundaries (for example, author/series/tag lookups) with `DEBUG` so operators can see why handler responses were slow, but keep handler-level success logs out of the service layer.
   - Extend the storage wrapper in `kopds/internal/database/sqlite.go` to carry a logger so repository methods can emit structured, project-scoped logs.
-- [ ] **5.3 Implement Service Logging in KOSYNC**: Add query-level logging in `internal/database`.
+- [x] **5.3 Implement Service Logging in KOSYNC**: Add query-level logging in `internal/database`.
   - In `kosync/internal/database/sqlite.go`, add a logger field to `Storage`, initialize it in `InitDB`, and emit `DEBUG` entries around `GetProgress`, `UpsertProgress`, `CreateUserIfNotExists`, `GetUserHash`, `DeleteUser`, and `UpdateUserPassword`.
   - Log `ERROR` with the SQL operation name and the concrete failure reason on any database error.
   - Preserve handler-level `INFO` success logs in `kosync/internal/api/handlers.go`; service/database logs should remain diagnostic, not duplicate business events.
-- [ ] **5.4 Test Service Logging**: Verify the lower layers log without duplicating HTTP-level logs.
+- [x] **5.4 Test Service Logging**: Verify the lower layers log without duplicating HTTP-level logs.
   - Add unit tests for repository/database methods that assert `DEBUG` and `ERROR` messages are present, while handler-focused tests continue to assert business-level messages.
   - Check that service/database logs include stable fields such as `operation`, `username`, `document`, and `error`.
 
