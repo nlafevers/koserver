@@ -103,19 +103,19 @@ At the beginning of work on each step, prior to making any changes to any code, 
 
 **Objective**: Ensure consistent and informative logging for application lifecycle events.
 
-- [ ] **4.1 Unify Startup Logging**: Add structured startup logs in both servers and keep them at INFO level.
+- [x] **4.1 Unify Startup Logging**: Add structured startup logs in both servers and keep them at INFO level.
   - In `kopds/cmd/kopds/main.go`, update `main()` to initialize the logger before CLI branching, then emit an application startup log with `app_name`, `port`, `database_path`, `log_level`, `json_log`, and `log_path` once config is loaded. In `runServer()`, keep the existing database startup log and add a dedicated server-listening log before `ListenAndServe`.
   - In `kosync/cmd/kosync/main.go`, move startup logging to the top of `main()` after `logger.New(...)`, log `app_name`, `port`, `database_path`, `log_level`, `json_log`, and `log_path`, and ensure CLI commands do not emit server startup logs.
   - Use identical field names across projects so startup lines can be compared directly in text and JSON modes.
-- [ ] **4.2 Unify Shutdown Logging**: Log shutdown events consistently on signal receipt, graceful stop, and shutdown failures.
+- [x] **4.2 Unify Shutdown Logging**: Log shutdown events consistently on signal receipt, graceful stop, and shutdown failures.
   - In `kopds/cmd/kopds/main.go`, log `shutdown signal received` with the signal name, log the start of shutdown before `srv.Shutdown`, and log `server exited cleanly` only after shutdown finishes. On shutdown failure, log `server shutdown failed` with `error`.
   - In `kosync/cmd/kosync/main.go`, add the same signal receipt and shutdown completion logs around `server.Shutdown(context.Background())`, and keep `server failed` logs scoped to actual listener failures.
   - Include `reason` and `uptime` fields when available so operators can tell the difference between normal exit and failure.
-- [ ] **4.3 Unify Database Initialization Logging**: Log database initialization and migration milestones with stable field names.
+- [x] **4.3 Unify Database Initialization Logging**: Log database initialization and migration milestones with stable field names.
   - In `kopds/cmd/kopds/main.go`, log `database initialized` after `database.NewSQLite` and `database.Migrate`, including `database_path`, `migration_status`, and `storage_cap_mb` when available.
   - In `kosync/cmd/kosync/main.go`, log `database initialized` after `database.InitDB(...)` and include `database_path` plus the storage cap setting from config.
   - If startup storage-cap enforcement is added later, log that separately so initialization logs stay distinct from runtime maintenance logs.
-- [ ] **4.4 Test Startup/Shutdown Logging**: Add lifecycle log tests and manual verification steps.
+- [x] **4.4 Test Startup/Shutdown Logging**: Add lifecycle log tests and manual verification steps.
   - Add targeted tests in `kopds/cmd/kopds/main_test.go` and `kosync/cmd/kosync/main_test.go` (or helper-based test wrappers) to assert startup, shutdown, and invalid-config logs.
   - Verify the startup path logs the same keys in both projects, including `app_name`, `port`, and `database_path`.
   - Re-run startup/shutdown scenarios with `LOG_LEVEL=INFO` and `LOG_LEVEL=DEBUG` to ensure the lifecycle events remain visible.
