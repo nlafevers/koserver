@@ -103,48 +103,99 @@ At the beginning of work on each step, prior to making any changes to any code, 
 
 **Objective**: Ensure consistent and informative logging for application lifecycle events.
 
-- [ ] **4.1 Unify Startup Logging**: Both projects should log at INFO level: app name, version, selected port, database path, log level, and notable config settings; ensure output is identical in format.
-- [ ] **4.2 Unify Shutdown Logging**: Both projects should log graceful shutdown and errors at appropriate levels; include uptime and shutdown reason.
-- [ ] **4.3 Unify Database Initialization Logging**: Both projects should log successful database initialization, schema migration status, and storage cap enforcement at INFO level.
-- [ ] **4.4 Test Startup/Shutdown Logging**: Verify expected log entries appear when starting normally, starting with invalid config, shutting down cleanly, and encountering errors.
+- [ ] **4.1 Unify Startup Logging**: Add structured startup logs in both servers and keep them at INFO level.
+  - In `kopds/cmd/kopds/main.go`, update `main()` to initialize the logger before CLI branching, then emit an application startup log with `app_name`, `port`, `database_path`, `log_level`, `json_log`, and `log_path` once config is loaded. In `runServer()`, keep the existing database startup log and add a dedicated server-listening log before `ListenAndServe`.
+  - In `kosync/cmd/kosync/main.go`, move startup logging to the top of `main()` after `logger.New(...)`, log `app_name`, `port`, `database_path`, `log_level`, `json_log`, and `log_path`, and ensure CLI commands do not emit server startup logs.
+  - Use identical field names across projects so startup lines can be compared directly in text and JSON modes.
+- [ ] **4.2 Unify Shutdown Logging**: Log shutdown events consistently on signal receipt, graceful stop, and shutdown failures.
+  - In `kopds/cmd/kopds/main.go`, log `shutdown signal received` with the signal name, log the start of shutdown before `srv.Shutdown`, and log `server exited cleanly` only after shutdown finishes. On shutdown failure, log `server shutdown failed` with `error`.
+  - In `kosync/cmd/kosync/main.go`, add the same signal receipt and shutdown completion logs around `server.Shutdown(context.Background())`, and keep `server failed` logs scoped to actual listener failures.
+  - Include `reason` and `uptime` fields when available so operators can tell the difference between normal exit and failure.
+- [ ] **4.3 Unify Database Initialization Logging**: Log database initialization and migration milestones with stable field names.
+  - In `kopds/cmd/kopds/main.go`, log `database initialized` after `database.NewSQLite` and `database.Migrate`, including `database_path`, `migration_status`, and `storage_cap_mb` when available.
+  - In `kosync/cmd/kosync/main.go`, log `database initialized` after `database.InitDB(...)` and include `database_path` plus the storage cap setting from config.
+  - If startup storage-cap enforcement is added later, log that separately so initialization logs stay distinct from runtime maintenance logs.
+- [ ] **4.4 Test Startup/Shutdown Logging**: Add lifecycle log tests and manual verification steps.
+  - Add targeted tests in `kopds/cmd/kopds/main_test.go` and `kosync/cmd/kosync/main_test.go` (or helper-based test wrappers) to assert startup, shutdown, and invalid-config logs.
+  - Verify the startup path logs the same keys in both projects, including `app_name`, `port`, and `database_path`.
+  - Re-run startup/shutdown scenarios with `LOG_LEVEL=INFO` and `LOG_LEVEL=DEBUG` to ensure the lifecycle events remain visible.
 
 ### Phase 5: Standardize Service/Repository Layer Logging
 
 **Objective**: Ensure database operations and service-layer actions log appropriately without duplicating HTTP-level logging.
 
-- [ ] **5.1 Review Service Logging Strategy**: Decide whether repository/service layer operations log individually (detailed) or only at API handler level (cleaner); document the choice.
-- [ ] **5.2 Implement Service Logging in KOPDS**: Add DEBUG-level logging for database queries (book lookups, user queries); add ERROR logging for query failures.
-- [ ] **5.3 Implement Service Logging in KOSYNC**: Add DEBUG-level logging for database queries (progress lookups, user queries); add ERROR logging for query failures.
-- [ ] **5.4 Test Service Logging**: Verify service-layer logging complements (not duplicates) handler-level logging; verify DEBUG logs show query details and ERROR logs show failure reasons.
+- [ ] **5.1 Review Service Logging Strategy**: Decide on a single pattern for lower layers before coding.
+  - Lower layers should log `DEBUG` for query-level diagnostics and `ERROR` for failures, while handlers retain `INFO`-level business success logs.
+  - Do not duplicate request-complete logs from middleware; instead, service logs should show query context such as `table`, `operation`, and result counts.
+- [ ] **5.2 Implement Service Logging in KOPDS**: Add query-level logging in the repository/service stack.
+  - In `kopds/internal/database/book_repository.go` and `kopds/internal/database/user_repository.go`, add `DEBUG` logs for lookup, insert, update, and delete operations, and `ERROR` logs when SQL execution fails.
+  - In `kopds/internal/service/book_service.go`, log fetch boundaries (for example, author/series/tag lookups) with `DEBUG` so operators can see why handler responses were slow, but keep handler-level success logs out of the service layer.
+  - Extend the storage wrapper in `kopds/internal/database/sqlite.go` to carry a logger so repository methods can emit structured, project-scoped logs.
+- [ ] **5.3 Implement Service Logging in KOSYNC**: Add query-level logging in `internal/database`.
+  - In `kosync/internal/database/sqlite.go`, add a logger field to `Storage`, initialize it in `InitDB`, and emit `DEBUG` entries around `GetProgress`, `UpsertProgress`, `CreateUserIfNotExists`, `GetUserHash`, `DeleteUser`, and `UpdateUserPassword`.
+  - Log `ERROR` with the SQL operation name and the concrete failure reason on any database error.
+  - Preserve handler-level `INFO` success logs in `kosync/internal/api/handlers.go`; service/database logs should remain diagnostic, not duplicate business events.
+- [ ] **5.4 Test Service Logging**: Verify the lower layers log without duplicating HTTP-level logs.
+  - Add unit tests for repository/database methods that assert `DEBUG` and `ERROR` messages are present, while handler-focused tests continue to assert business-level messages.
+  - Check that service/database logs include stable fields such as `operation`, `username`, `document`, and `error`.
 
 ### Phase 6: Storage Cap and Maintenance Logging
 
 **Objective**: Ensure storage cap enforcement and database maintenance operations log appropriately for operational visibility.
 
-- [ ] **6.1 Add Storage Cap Logging**: Both projects should log at DEBUG level when checking cap, at WARN level when pruning is triggered, and at INFO level when pruning completes; include freed space and deleted row counts.
-- [ ] **6.2 Add Database Maintenance Logging**: Both projects should log VACUUM operations, WAL checkpoints, and maintenance timing at DEBUG level.
-- [ ] **6.3 Test Storage Cap Logging**: Verify expected log entries for cap checks, pruning triggers, and completions; verify log content is identical between projects.
+- [ ] **6.1 Add Storage Cap Logging**: Add visibility around database size checks, pruning, and vacuuming.
+  - In `kopds/internal/database/sqlite.go` and `kosync/internal/database/sqlite.go`, log `DEBUG` before each cap check with `database_path`, `current_size_mb`, and `cap_mb`.
+  - When the cap is exceeded, log `WARN` before pruning with the number of records targeted, `WARN` when pruning begins, and `INFO` when pruning/recovery completes.
+  - Change the prune helpers so they return deleted row counts or another structured summary that can be logged, instead of only returning success/failure.
+- [ ] **6.2 Add Database Maintenance Logging**: Log SQLite maintenance operations with timing and outcome.
+  - Wrap `VACUUM` execution in both database packages with `DEBUG` start/end logs and `ERROR` on failure.
+  - If checkpoint or WAL maintenance is added, log `DEBUG` around those calls with `duration` measured with `time.Since(...)`.
+  - Keep maintenance logs distinct from request-handler logs so operators can separate runtime traffic from database housekeeping.
+- [ ] **6.3 Test Storage Cap Logging**: Add unit tests for pruning and vacuum logging.
+  - In `kopds/internal/database/storage_cap_test.go` and `kosync/internal/database/storage_cap_test.go`, verify `DEBUG` cap-check logs, `WARN` prune-trigger logs, and completion logs after pruning.
+  - Confirm that identical fields are emitted across both projects for equivalent cap-pruning scenarios.
 
 ### Phase 7: Integration Testing and Documentation
 
 **Objective**: Verify logging works correctly in real scenarios and document for operators.
 
-- [ ] **7.1 Create Logging Test Matrix**: Document test cases covering all operation classes and log levels; ensure tests run with both text and JSON logging.
-- [ ] **7.2 Run Full Logging Integration Tests**: Execute integration scripts and manual testing with LOG_LEVEL=DEBUG and LOG_LEVEL=INFO; verify all expected logs appear with correct level, content, and format.
-- [ ] **7.3 Test Docker Logging**: Start both applications in Docker containers with various LOG_LEVEL settings; verify logs appear in `docker logs` output correctly.
-- [ ] **7.4 Update READMEs**: Document expected log output for common operations; add troubleshooting section explaining what logs indicate healthy vs. problematic operation.
-- [ ] **7.5 Update GEMINI Files**: Document the logging strategy, expected log levels for all operations, and interpretation guidance.
+- [ ] **7.1 Create Logging Test Matrix**: Add an explicit matrix of logging scenarios and expected outputs.
+  - Update `logging-plan.md` with a table covering startup, CLI, authentication, progress operations, storage-cap enforcement, and shutdown for both text and JSON log formats.
+  - Use the existing `internal/*_test.go` files and integration scripts as the execution targets for those matrix entries.
+- [ ] **7.2 Run Full Logging Integration Tests**: Execute real logging scenarios in both projects.
+  - Run `kopds/test/integration_test.sh` and `kosync/test/integration_test.sh` with `LOG_LEVEL=INFO` and `LOG_LEVEL=DEBUG` to capture operational logs.
+  - Validate that request middleware logs, handler logs, CLI logs, and maintenance logs appear at the expected level and field set.
+- [ ] **7.3 Test Docker Logging**: Exercise containerized logging paths.
+  - Use `build/Dockerfile`, `deploy/docker-compose.yml`, and the existing container entrypoints to confirm `docker logs` shows startup, request, and failure logs with the configured log level.
+  - Capture both plain text and JSON modes if the container configuration allows them.
+- [ ] **7.4 Update READMEs**: Document operator-facing logging behavior.
+  - Update `kopds/README.md` and `kosync/README.md` with examples of healthy vs. unhealthy log patterns, common `LOG_LEVEL` usage, and how to interpret `WARN`/`ERROR` entries.
+  - Add troubleshooting notes for missing logs, storage-cap pruning, and shutdown failures.
+- [ ] **7.5 Update GEMINI Files**: Document the logging strategy in both project guides.
+  - Update `kopds/GEMINI.md` and `kosync/GEMINI.md` so they describe the `log/slog` strategy, expected log levels, and operator guidance.
 
 ### Phase 8: Final Verification
 
 **Objective**: Confirm logging is comprehensive, uniform, and production-ready.
 
-- [ ] **8.1 Logging Coverage Audit**: Re-run the logging matrix; verify every operation class has at least one test case; verify no significant operations are missing logs.
-- [ ] **8.2 Uniformity Audit**: Compare log output from equivalent operations in both projects; document any intentional differences and justify them.
-- [ ] **8.3 Run All Tests**: Execute `go test ./...` in both projects; ensure all logging tests pass.
-- [ ] **8.4 Performance Check**: Verify logging does not introduce measurable performance degradation; check logging middleware response times.
-- [ ] **8.5 Update AGENTS.md Files**: Update `kopds/AGENTS.md` and `kosync/AGENTS.md` to replace references to `rs/zerolog` with `log/slog` and document the logging strategy for both projects.
-- [ ] **8.6 Final Documentation**: Update [uniformity-plan.md](uniformity-plan.md) to reflect logging standardization completion; update [todo.md](todo.md) to mark all logging TODOs as complete.
+- [ ] **8.1 Logging Coverage Audit**: Re-run the logging matrix and ensure every operation class has coverage.
+  - Compare event coverage from middleware, CLI, handlers, and maintenance paths across both projects.
+  - Confirm there are no missing business events such as startup, shutdown, auth failure, progress update, cache miss, or storage-cap enforcement.
+- [ ] **8.2 Uniformity Audit**: Compare equivalent log output across both projects.
+  - Check that shared operations emit the same field names and severity levels in both `kopds` and `kosync`.
+  - Record any intentional differences, especially where KOPDS has book/image operations that KOSYNC does not.
+- [ ] **8.3 Run All Tests**: Execute `go test ./...` in both projects and confirm logging-related tests pass.
+  - Run `go test ./...` in `kopds/` and `kosync/` from the repository root or each project directory.
+  - Treat logging regressions as blocking failures.
+- [ ] **8.4 Performance Check**: Verify logging overhead remains acceptable.
+  - Measure request timings with middleware enabled and compare them against baseline runs to ensure added structured logging does not introduce significant latency.
+  - Focus on the request completion path in `LoggingMiddleware` and repeated JSON/text handler logs.
+- [ ] **8.5 Update AGENTS.md Files**: Update agent guidance to reflect `log/slog`.
+  - Change the logging references in `kopds/AGENTS.md` and `kosync/AGENTS.md` from `rs/zerolog` to `log/slog`.
+  - Add a short note that startup, request, CLI, and maintenance logs should follow the shared `log/slog` field conventions.
+- [ ] **8.6 Final Documentation**: Update the broader planning docs.
+  - Update [uniformity-plan.md](uniformity-plan.md) to reflect logging standardization completion.
+  - Update [todo.md](todo.md) to mark all logging-related phases complete once the work is finished.
 
 ## Logging Implementation Guidelines
 
