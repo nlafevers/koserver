@@ -59,8 +59,8 @@ At the beginning of work on each step, prior to making any changes to any code, 
 
 **Objective**: Standardize HTTP request/response logging across both projects with identical middleware.
 
-- [ ] **1.0 Rebase KOSYNC Middleware**: Move KOSYNC middleware from `internal/middleware/middleware.go` to `internal/api/middleware.go`, remove or retire the old `internal/middleware` package, and keep the package layout identical to KOPDS.
-- [ ] **1.1 Design Logging Middleware**: Create `LoggingMiddleware` for stdlib `net/http.ServeMux` that:
+- [x] **1.0 Rebase KOSYNC Middleware**: Move KOSYNC middleware from `internal/middleware/middleware.go` to `internal/api/middleware.go`, remove or retire the old `internal/middleware` package, and keep the package layout identical to KOPDS.
+- [x] **1.1 Design Logging Middleware**: Create `LoggingMiddleware` for stdlib `net/http.ServeMux` that:
   - generates a unique `request_id` for each request,
   - creates a request-scoped logger with `method`, `path`, and `request_id`,
   - stores the request-scoped logger and authenticated username in context,
@@ -69,29 +69,35 @@ At the beginning of work on each step, prior to making any changes to any code, 
   - logs client errors at WARN and server errors at ERROR, with full response/error context,
   - emits DEBUG-level logs for detailed response diagnostics,
   - is applied as the outermost middleware around the final router so it captures the full request lifecycle, including auth/rate-limiting.
-- [ ] **1.2 Standardize Request Context**: Update both KOPDS and KOSYNC auth middleware to store authenticated username in the request context using shared context key constants.
-- [ ] **1.3 Implement Logging Middleware in KOPDS**: Extend `internal/api/middleware.go` to add `LoggingMiddleware`; apply middleware as the outermost wrapper around the final mux in `main.go`.
-- [ ] **1.4 Implement Logging Middleware in KOSYNC**: Create `internal/api/middleware.go` with identical `LoggingMiddleware`; apply middleware as the outermost wrapper around the final mux in `main.go`.
-- [ ] **1.5 Test Logging Middleware**: Add unit tests verifying correct log output for various HTTP status codes and request types, request_id correlation across logs, request-scoped logger propagation, and 5xx error capture.
+- [x] **1.2 Standardize Request Context**: Update both KOPDS and KOSYNC auth middleware to store authenticated username in the request context using shared context key constants.
+- [x] **1.3 Implement Logging Middleware in KOPDS**: Extend `internal/api/middleware.go` to add `LoggingMiddleware`; apply middleware as the outermost wrapper around the final mux in `main.go`.
+- [x] **1.4 Implement Logging Middleware in KOSYNC**: Create `internal/api/middleware.go` with identical `LoggingMiddleware`; apply middleware as the outermost wrapper around the final mux in `main.go`.
+- [x] **1.5 Test Logging Middleware**: Add unit tests verifying correct log output for various HTTP status codes and request types, request_id correlation across logs, request-scoped logger propagation, and 5xx error capture.
 
 ### Phase 2: Standardize CLI Operation Logging
 
 **Objective**: Ensure all CLI operations (create-user, delete-user, change-password) log at INFO level on success and WARN level on failure.
 
-- [ ] **2.1 Create CLI Logging Helpers**: Add `internal/logger/cli.go` in both projects with standardized functions: `LogCLISuccess(logger *slog.Logger, operation, username string)`, `LogCLIFailure(logger *slog.Logger, operation, username, reason string)`. Helpers include `source="CLI"` field in all logs.
-- [ ] **2.2 Implement KOPDS CLI Logging**: Refactor `cmd/kopds/main.go` user-management functions to call logging helpers; ensure all success and failure paths log at appropriate levels.
-- [ ] **2.3 Implement KOSYNC CLI Logging**: Refactor `cmd/kosync/main.go` user-management functions to call identical logging helpers; ensure all success and failure paths log at appropriate levels.
-- [ ] **2.4 Test CLI Logging**: Add tests verifying exact log output (level and message) for success/failure of create, delete, and change-password operations; verify source="CLI" tag is present.
+- [x] **2.1 Create CLI Logging Helpers**: Add `internal/logger/cli.go` in both projects with standardized functions: `LogCLISuccess(logger *slog.Logger, operation, username string)`, `LogCLIFailure(logger *slog.Logger, operation, username, reason string)`. Helpers include `source="CLI"` field in all logs.
+- [x] **2.2 Implement KOPDS CLI Logging**: Refactor `cmd/kopds/main.go` user-management functions to call logging helpers; ensure all success and failure paths log at appropriate levels.
+- [x] **2.3 Implement KOSYNC CLI Logging**: Refactor `cmd/kosync/main.go` user-management functions to call identical logging helpers; ensure all success and failure paths log at appropriate levels.
+- [x] **2.4 Test CLI Logging**: Add tests verifying exact log output (level and message) for success/failure of create, delete, and change-password operations; verify source="CLI" tag is present.
 
 ### Phase 3: Standardize API Operation Logging (Handlers)
 
 **Objective**: Ensure all handler operations log success at INFO level and failures at appropriate error/warn levels with complete diagnostic information.
 
-- [ ] **3.1 Review Current Handler Logging**: Audit all handlers in both projects; document current gaps (e.g., KOPDS missing progress operation logging; KOSYNC missing successful GET logging).
-- [ ] **3.2 Add Uniform Handler Logging in KOPDS**: Add INFO logging for successful OPDS catalog responses, book catalog retrieval, image cache hits/misses, and basic auth successes; add DEBUG logging for detailed diagnostic info.
-- [ ] **3.3 Add Uniform Handler Logging in KOSYNC**: Add INFO logging for successful progress GET and PUT operations; add DEBUG logging for detailed diagnostic info about updates, skips, and comparisons.
-- [ ] **3.4 Standardize Error Context in Handlers**: Ensure all handler error paths include username (if auth'd), request path, and error detail; use consistent field names across both projects.
-- [ ] **3.5 Test Handler Logging**: Add integration tests for each handler verifying correct log output for success, client errors, and server errors.
+- [x] **3.1 Review Current Handler Logging**: Audit all handlers in both projects; document current gaps:
+  - **KOPDS**: Missing success-level logging for all feed handlers; `CoverHandler` lacks cache hit/miss diagnostic logging; error paths in handlers don't log structured errors with context; handlers don't consistently use request-scoped logger.
+  - **KOSYNC**: `HandleGetProgress` missing success logging; `HandleUpdateProgress` lacks detailed "skip vs update" diagnostics; handlers don't consistently use request-scoped logger.
+- [x] **3.2 Add Uniform Handler Logging in KOPDS**: Add INFO logging for successful OPDS catalog responses, book catalog retrieval, image cache hits/misses, and basic auth successes; add DEBUG logging for detailed diagnostic info. Use `GetLogger(r.Context())`.
+- [x] **3.3 Add Uniform Handler Logging in KOSYNC**: Re-implement the missing KOSYNC handler path and restore uniform handler logging across the API package.
+  - [x] **3.3.1 Restore `HandleAuth`**: Re-introduce `HandleAuth` in `kosync/internal/api/handlers.go` so the route referenced from `cmd/kosync/main.go` compiles and returns the expected authenticated success response. Use the shared request-scoped logger and request context fields.
+  - [x] **3.3.2 Restore Uniform Success Logging**: Use `GetLogger(r.Context())` in `HandleAuth`, `HandleGetProgress`, and `HandleUpdateProgress` so successful operations log at INFO level with structured context (`username`, `document`, `percentage`, `status_code` via middleware where applicable).
+  - [x] **3.3.3 Restore Uniform Diagnostic Logging**: Add DEBUG-level logs for progress lookups, updates, auth success, and storage-cap enforcement details; preserve the existing request-scoped logger and context keys.
+  - [x] **3.3.4 Restore Handler Coverage**: Re-run or add handler-focused tests proving auth, progress GET, and progress PUT paths complete with the expected log output and handler behavior.
+- [x] **3.4 Standardize Error Context in Handlers**: Ensure all handler error paths include username (if auth'd), request path, and error detail; use consistent field names across both projects. Use `GetLogger(r.Context())`.
+- [x] **3.5 Test Handler Logging**: Add integration tests for each handler verifying correct log output for success, client errors, and server errors.
 
 ### Phase 4: Standardize Startup/Shutdown Logging
 
