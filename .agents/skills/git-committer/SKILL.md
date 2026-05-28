@@ -13,9 +13,13 @@ First, always check for project-specific commit conventions by searching for "co
 
 ## Workflow
 
-1. Change to the parent directory of the repository in which you made changes.  Some workspaces may have nested repositories with either loose or defined submodules.  Make sure you are in the correct repository before committing.  If you aren't sure, check `AGENTS.md`, or similar files, in the workspace root to learn about the git repository structure.
+1. Identify the root directory of the repository in which you made changes.  Some workspaces may have nested repositories with either loose or defined submodules.  Make sure you are in the correct repository before committing.  If you aren't sure, check `AGENTS.md`, or similar files, in the workspace root to learn about the git repository structure.  Additionally, if `cd` does not persist between tool calls, you will need to chain the `cd` command with each subsequent git command shown in steps 2-5.
     ```bash
     cd <path-to-repo>
+    # or 
+    export REPO_DIR=$(git -C "$(dirname "<absolute-path-to-file>")" rev-parse --show-toplevel)
+    # then add the following in front of each git command in steps 2-5:
+    git -C "$REPO_DIR" <git-command>
     ```
 2. Review the changes you made.
     ```bash
