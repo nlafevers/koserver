@@ -18,25 +18,36 @@ Uses cost-efficient lightweight AI models/agents to implement changes when a det
 
 ## Workflow
 
-- Ensure a detailed planning document with a roadmap or checklist is specified to guide the changes, and if absent, request one.
-- Review the roadmap or checklist for annotations that indicate how much progress has been made already, and note conventions used for indicating work-in-progress versus work-completed.
-- Begin with the first uncompleted step:
-    1. Review the instructions for that step, and plan how you will implement them.  If you foresee any problems, or need any clarification, stop and report the issue, and when possible provide options for moving forward.
-    2. When ready to proceed, annotate the checkbox for that step to indicate work in progress (use the project convention if already established, otherwise `[-]`).
-    3. Implement the changes as you planned to, modified according to any feedback you received.
-    4. When finished implementing the changes for that step, annotate the checkbox for that step to indicate work completed (use the project convention if already established, otherwise `[x]`).
-    5. Change to the parent directory of the repository in which you made changes.
-    6. Stage the files you made changes to if they are not listed in `.gitignore`.
-    7. Commit the changes using the `git-commit` skill if available, otherwise use conventional commit format.
-- Proceed to the next uncompleted step within the same phase following the same seven step procedure specified above.
-- Unless specifically told to proceed through multiple phases, stop when all uncompleted steps in a phase have been completed, and provide a report on the work completed.
-- If told to proceed through multiple phases, stop when all uncompleted steps have been completed in the specified phases, and provide a report on the work completed.
+1. **Locate & Parse**: Ensure a detailed planning document with unique step identifiers (e.g., `TS-101`) is present. If absent, ask the user to provide or generate one before proceeding.
+2. **Assess Progress**: Review the roadmap for completed `[x]`, in-progress `[-]`, and incomplete `[ ]` steps. 
+   - *If an in-progress `[-]` step is found*, assume a previous execution was interrupted. Assess the current state of the codebase, run tests, and resume this step.
+   - *Otherwise*, identify the very first incomplete `[ ]` step.
+3. **Plan & Mark WIP**: 
+   - Formulate a specific implementation plan for this single step. 
+   - If instructions are ambiguous or you foresee architectural blockers, stop and ask the user for clarification.
+   - Once ready to proceed, update the roadmap file immediately by changing that specific step's checkbox to `[-]`.
+4. **Implement**: Execute the code changes required *only* for this specific step. Do not modify code relevant to future steps.
+5. **Verify (Definition of Done)**: Run relevant linters, compilers, or test suites to verify your changes. **NEVER** mark a step complete if the build is broken or tests fail.
+6. **Mark Complete**: Update the roadmap file a second time, changing the specific step identifier from `[-]` to `[x]`.
+7. **Commit Changes**: Invoke the `git-committer` skill to commit the implementation if available, otherwise do the following:
+   - Identify the repository root for each file modified by substituting its path into this command: `git -C "$(dirname "/path/to/modified/file")" rev-parse --show-toplevel`
+   - If the modified files span multiple repositories, repeat **Step 7. Commit Changes** for each repository modified.    
+   - Navigate to the repository root explicitly for each git command (e.g., chaining `cd <path-to-repo-root> && git <command>`) to avoid directory drift.
+   - Stage only the files modified in the current implementation step.
+   - Create a commit using the Conventional Commits format: `type(scope): subject`. Include a body for complex changes, referencing any related issues, documentation, and unique step identifiers.
+8. **Budget & Boundary Check**: 
+   - Evaluate your remaining context window and CLI turn limits. 
+   - Stop and provide a progress report to the user. Ask explicitly for permission to proceed to the next step, unless the user explicitly authorized fully automated execution of the entire phase.
 
 ## Output
 
-- If reporting a problem, provide details about the problem and provide options for resolution if possible.
-- If requesting clarification, report why you found the instructions to be deficient, and suggest what information you need to resolve the deficiency.
-- If reporting work completed, provide a summary of the steps completed, the changes made for each step, any tests conducted, any documentation updated, any commits made, and suggest a verification process to the user in case they would like to independently check your work.
+- **Interruption/Blocker Report**: If reporting a problem or requesting clarification, provide the unique step ID, details about the roadblock, and options for resolution.
+- **Step/Phase Completion Report**: After completing a step (or phase if authorized to run automatically), provide a concise summary containing:
+  - The unique step ID(s) completed.
+  - Specific files changed.
+  - Test/verification results.
+  - The resulting Git commit hash(es) and repository information.
+  - Suggested manual verification step(s) for the user.
 
 ## References
 

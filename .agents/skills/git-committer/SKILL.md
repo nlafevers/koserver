@@ -17,6 +17,8 @@ First, always check for project-specific commit conventions by searching for "co
     ```bash
     export REPO_DIR=$(git -C "$(dirname "<absolute-path-to-file>")" rev-parse --show-toplevel)
     ```
+    [!NOTE]
+    If your bash execution environment is stateless (does not persist variables between tool calls), either combine these steps into a single bash execution block, or explicitly replace $REPO_DIR with the resolved absolute path in your subsequent commands.
 2. Review the changes you made.
     ```bash
     git -C "$REPO_DIR" status
