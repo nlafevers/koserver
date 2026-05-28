@@ -199,7 +199,7 @@ At the beginning of work on each step, prior to making any changes to any code, 
 - [x] **7.2 Run Full Logging Integration Tests**: Execute real logging scenarios in both projects.
   - Run `kopds/test/integration_test.sh` and `kosync/test/integration_test.sh` with `LOG_LEVEL=INFO` and `LOG_LEVEL=DEBUG` to capture operational logs.
   - Validate that request middleware logs, handler logs, CLI logs, and maintenance logs appear at the expected level and field set.
-- [ ] **7.3 Test Docker Logging**: Exercise containerized logging paths.
+- [x] **7.3 Test Docker Logging**: Exercise containerized logging paths.
   - Use `build/Dockerfile`, `deploy/docker-compose.yml`, and the existing container entrypoints to confirm `docker logs` shows startup, request, and failure logs with the configured log level.
   - Capture both plain text and JSON modes if the container configuration allows them.
 - [ ] **7.4 Update READMEs**: Document operator-facing logging behavior.
