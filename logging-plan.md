@@ -159,7 +159,7 @@ At the beginning of work on each step, prior to making any changes to any code, 
 
 **Objective**: Verify logging works correctly in real scenarios and document for operators.
 
-- [-] **7.1 Create Logging Test Matrix**: Add an explicit matrix of logging scenarios and expected outputs.
+- [x] **7.1 Create Logging Test Matrix**: Add an explicit matrix of logging scenarios and expected outputs.
   - Update `logging-plan.md` with a table covering startup, CLI, authentication, progress operations, storage-cap enforcement, and shutdown for both text and JSON log formats.
   - Use the existing `internal/*_test.go` files and integration scripts as the execution targets for those matrix entries.
 
