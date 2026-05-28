@@ -19,8 +19,9 @@ This project uses a strict annotation format to track the state of implementatio
 ```markdown
 ### Phase 1: Foundation
 - [x] **INIT-01**: Project Initialization (Commit: a1b2c3d)
-- [-] **INIT-02**: Database Schema Initialization
-- [ ] **INIT-03**: Configure CI/CD Pipeline
+- [x] **INIT-02**: Check Missing Dependencies (Commit: none)
+- [-] **INIT-03**: Database Schema Initialization
+- [ ] **INIT-04**: Configure CI/CD Pipeline
 
 ### Phase 2: Core Features
 - [ ] **FEAT-01**: Implement User Authentication

@@ -28,7 +28,7 @@ Uses cost-efficient lightweight AI models/agents to implement changes when a det
    - Once ready to proceed, update the roadmap file immediately by changing that specific step's checkbox to `[-]`.
 4. **Implement**: Execute the code changes required *only* for this specific step. Do not modify code relevant to future steps.
 5. **Verify (Definition of Done)**: Run relevant linters, compilers, or test suites to verify your changes. **NEVER** mark a step complete if the build is broken or tests fail.
-6. **Mark Complete**: Update the roadmap file a second time, changing the specific step identifier from `[-]` to `[x]`.
+6. **Mark Complete**: Update the roadmap file a second time, changing the specific step identifier from `[-]` to `[x]`.  Append to the end of the same line the commit hash as an audit trail, see `references/annotation-format.md` for details.
 7. **Commit Changes**: Invoke the `git-committer` skill to commit the implementation if available, otherwise do the following:
    - Identify the repository root for each file modified by substituting its path into this command: `git -C "$(dirname "/path/to/modified/file")" rev-parse --show-toplevel`
    - If the modified files span multiple repositories, repeat **Step 7. Commit Changes** for each repository modified.    
