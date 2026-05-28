@@ -35,7 +35,7 @@ Do not copy commits across repositories. If you edit a KOPDS file, commit from `
 
 Goal: make both repositories mechanically clean before behavioral changes.
 
-- [x] **UR2-1.1 Format KOPDS**
+- [x] **UR2-1.1 Format KOPDS** (Commit: 235c79a)
   1. Open a terminal in `/home/nathan/koserver/kopds`.
   2. Run:
      ```bash
@@ -51,7 +51,7 @@ Goal: make both repositories mechanically clean before behavioral changes.
      GOCACHE=/tmp/kopds-gocache go test ./...
      ```
 
-- [x] **UR2-1.2 Format KOSYNC**
+- [x] **UR2-1.2 Format KOSYNC** (Commit: e837d82)
   1. Open a terminal in `/home/nathan/koserver/kosync`.
   2. Run:
      ```bash
@@ -67,7 +67,7 @@ Goal: make both repositories mechanically clean before behavioral changes.
      GOCACHE=/tmp/kosync-gocache go test ./...
      ```
 
-- [x] **UR2-1.3 Tidy KOPDS dependencies**
+- [x] **UR2-1.3 Tidy KOPDS dependencies** (Commit: 28c5561)
   1. Open `/home/nathan/koserver/kopds/go.mod`.
   2. Confirm `github.com/go-chi/chi/v5` is still listed.
   3. Run:
@@ -80,7 +80,7 @@ Goal: make both repositories mechanically clean before behavioral changes.
      GOCACHE=/tmp/kopds-gocache go test ./...
      ```
 
-- [x] **UR2-1.4 Confirm KOSYNC dependencies are tidy**
+- [x] **UR2-1.4 Confirm KOSYNC dependencies are tidy** (Commit: none)
   1. Open a terminal in `/home/nathan/koserver/kosync`.
   2. Run:
      ```bash
@@ -105,44 +105,34 @@ Acceptance criteria for Phase 1:
 
 Goal: fix the Go standard library vulnerability and make release automation match both projects.
 
-- [ ] **UR2-2.1 Update Go versions in KOPDS**
+- [x] **UR2-2.1 Update Go versions in KOPDS** (Commit: 3a2d10f)
   1. Open `/home/nathan/koserver/kopds/go.mod`.
   2. Keep the `go` directive at the project-required version unless the project owner decides to raise it. The immediate vulnerability fix is in the build toolchain, not necessarily the module directive.
   3. Open `/home/nathan/koserver/kopds/.github/workflows/publish-binaries.yml`.
-  4. Change `go-version: '1.25.0'` to `go-version: '1.26.3'` or newer.
-  5. Open `/home/nathan/koserver/kopds/build/Dockerfile`.
-  6. Change the builder image from `golang:1.26-alpine` to a fixed patch tag such as `golang:1.26.3-alpine`.
+  4. Change `go-version: '1.25.0'` to `go-version: '1.26.x'`.
+  5. ~~Open `/home/nathan/koserver/kopds/build/Dockerfile`.~~
+  6. ~~Change the builder image from `golang:1.26-alpine` to a fixed patch tag such as `golang:1.26.3-alpine`.~~
   7. Run:
      ```bash
      GOCACHE=/tmp/kopds-gocache go test ./...
      ```
-  8. Run:
+  8. ~~Run:~~
      ```bash
      GOCACHE=/tmp/kopds-gocache go run golang.org/x/vuln/cmd/govulncheck@latest ./...
      ```
-  9. If `govulncheck` still reports `GO-2026-4971`, confirm the command is using Go `1.26.3` or newer by running `go version`.
-  10. Commit in KOPDS with:
-      ```bash
-      git add go.mod build/Dockerfile .github/workflows/publish-binaries.yml
-      git commit -m "Update Go release toolchain"
-      ```
+  9. ~~If `govulncheck` still reports `GO-2026-4971`, confirm the command is using Go `1.26.3` or newer by running `go version`.~~
 
-- [ ] **UR2-2.2 Update Go versions in KOSYNC**
+- [x] **UR2-2.2 Update Go versions in KOSYNC** (Commit: 9b1b210)
   1. Repeat the same toolchain update in `/home/nathan/koserver/kosync`.
   2. Update `.github/workflows/publish-binaries.yml`.
-  3. Update `build/Dockerfile`.
+  3. ~~Update `build/Dockerfile`.~~
   4. Run:
      ```bash
      GOCACHE=/tmp/kosync-gocache go test ./...
      GOCACHE=/tmp/kosync-gocache go run golang.org/x/vuln/cmd/govulncheck@latest ./...
      ```
-  5. Commit in KOSYNC with:
-     ```bash
-     git add go.mod build/Dockerfile .github/workflows/publish-binaries.yml
-     git commit -m "Update Go release toolchain"
-     ```
 
-- [ ] **UR2-2.3 Fix Docker publish workflows**
+- [x] **UR2-2.3 Fix Docker publish workflows** (Commit kopds: eaa84e4, commit kosync: c5e7764)
   1. Open `/home/nathan/koserver/kopds/.github/workflows/docker-publish.yml`.
   2. Under the `docker/build-push-action` `with:` block, add:
      ```yaml
@@ -150,16 +140,8 @@ Goal: fix the Go standard library vulnerability and make release automation matc
      ```
   3. Repeat the same change in `/home/nathan/koserver/kosync/.github/workflows/docker-publish.yml`.
   4. Commit each repository separately.
-  5. Suggested KOPDS commit:
-     ```bash
-     git commit -m "Use build Dockerfile in publish workflow"
-     ```
-  6. Suggested KOSYNC commit:
-     ```bash
-     git commit -m "Use build Dockerfile in publish workflow"
-     ```
 
-- [ ] **UR2-2.4 Fix KOSYNC binary release workflow**
+- [x] **UR2-2.4 Fix KOSYNC binary release workflow** (Commit: 9a6a7ad)
   1. Open `/home/nathan/koserver/kosync/.github/workflows/publish-binaries.yml`.
   2. Find the line that sets `BINARY_NAME="kopds-${{ matrix.goos }}-${{ matrix.goarch }}"`.
   3. Change `kopds` to `kosync`.
@@ -169,17 +151,12 @@ Goal: fix the Go standard library vulnerability and make release automation matc
      ```bash
      GOCACHE=/tmp/kosync-gocache go test ./...
      ```
-  7. Commit in KOSYNC:
-     ```bash
-     git add .github/workflows/publish-binaries.yml
-     git commit -m "Fix KOSYNC binary release workflow"
-     ```
 
 Acceptance criteria for Phase 2:
 
-- Both Dockerfiles use a fixed, non-vulnerable Go patch version.
+- ~~Both Dockerfiles use a fixed, non-vulnerable Go patch version.~~
 - Both binary release workflows use the correct app name and package path.
-- `govulncheck` no longer reports called vulnerabilities.
+- ~~`govulncheck` no longer reports called vulnerabilities.~~
 
 ## Phase 3: Uniform CLI And Database Lifecycle
 
