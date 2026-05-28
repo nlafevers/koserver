@@ -13,15 +13,15 @@ First, always check for project-specific commit conventions by searching for "co
 
 ## Workflow
 
-1. Change to the parent directory of the repository in which you made changes.
+1. Change to the parent directory of the repository in which you made changes.  Some workspaces may have nested repositories with either loose or defined submodules.  Make sure you are in the correct repository before committing.  If you aren't sure, check `AGENTS.md`, or similar files, in the workspace root to learn about the git repository structure.
     ```bash
-    cd /path/to/repo
+    cd <path-to-repo>
     ```
 2. Review the changes you made.
     ```bash
     git status
-    git diff --staged  # if already staged
-    git diff           # if not staged
+    git --no-pager diff --staged  # if already staged
+    git --no-pager diff           # if not staged
     ```
 3. Stage the files you made changes to if they are not listed in `.gitignore`.  **NEVER commit**: `.env`, `.venv`, `credentials.json`, secrets, or large binary files without explicit approval.
     ```bash
@@ -30,16 +30,26 @@ First, always check for project-specific commit conventions by searching for "co
     git add -A  # all changes
     ```
 4. Create the commit using `type(scope): subject` format.  See below for `type` options, `scope` rules, and subject line rules.
+    **Simple change (without body)**:
     ```bash
-    git commit -m "type(scope): subject
-
-    Body explaining HOW and WHY if needed for complex changes.
-    Reference: Task X.Y, Req N"
+    git commit -m "type(scope): subject"
+    ```
+    
+    **Complex change (with body)**:
+    ```bash
+    cat << 'EOF' > .git/agent_commit_msg.txt
+    type(scope): subject
+    
+    Body
+    References
+    EOF
+    git commit -F .git/agent_commit_msg.txt
+    rm .git/agent_commit_msg.txt
     ```
 5. Verify the commit.
     ```bash
-    git log -1 --format="%h %s"
-    git show --stat HEAD
+    git --no-pager log -1 --format="%h %s"
+    git --no-pager show --stat HEAD
     ```
 
 ## Default Commit Format
@@ -47,7 +57,7 @@ First, always check for project-specific commit conventions by searching for "co
 ```
 type(scope): subject
 
-body (optional, for complex changes)
+Body (optional, for complex changes)
 References: Task X.Y, Req N (optional)
 ```
 
