@@ -19,8 +19,8 @@ At the beginning of work on each step, prior to making any changes to any code, 
   - Asserts that records were deleted and the physical file size decreased.
 
 ### KOSYNC Progress Synchronization
-- [ ] **Refactor Handler to respect timestamps**: Modify `HandleUpdateProgress` in `kosync/internal/api/handlers.go` to only overwrite the incoming timestamp with `time.Now().Unix()` if the provided timestamp is `0`. This allows clients to provide their own event ordering.
-- [ ] **Verify Conflict Resolution**: Add `TestProgressTimestampConflict` to `kosync/internal/api/handlers_test.go` that performs the following sequence:
+- [x] **Refactor Handler to respect timestamps**: Modify `HandleUpdateProgress` in `kosync/internal/api/handlers.go` to only overwrite the incoming timestamp with `time.Now().Unix()` if the provided timestamp is `0`. This allows clients to provide their own event ordering.
+- [x] **Verify Conflict Resolution**: Add `TestProgressTimestampConflict` to `kosync/internal/api/handlers_test.go` that performs the following sequence:
   - `PUT` a progress record with `timestamp=1000` and `percentage=0.5`.
   - `PUT` the same record with `timestamp=900` and `percentage=0.4` (Verify `GET` still returns `0.5`).
   - `PUT` the same record with `timestamp=1100` and `percentage=0.6` (Verify `GET` now returns `0.6`).
