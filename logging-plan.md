@@ -159,7 +159,7 @@ At the beginning of work on each step, prior to making any changes to any code, 
 
 **Objective**: Verify logging works correctly in real scenarios and document for operators.
 
-- [~] **7.1 Create Logging Test Matrix**: Add an explicit matrix of logging scenarios and expected outputs.
+- [-] **7.1 Create Logging Test Matrix**: Add an explicit matrix of logging scenarios and expected outputs.
   - Update `logging-plan.md` with a table covering startup, CLI, authentication, progress operations, storage-cap enforcement, and shutdown for both text and JSON log formats.
   - Use the existing `internal/*_test.go` files and integration scripts as the execution targets for those matrix entries.
 
@@ -172,8 +172,13 @@ At the beginning of work on each step, prior to making any changes to any code, 
 | CLI create user success | KOPDS | `cmd/kopds/main_test.go` | INFO | `username`, `operation`, `source`, `status` | `source=CLI` |
 | CLI create user failure | KOPDS | `cmd/kopds/main_test.go` | WARN | `username`, `operation`, `source`, `reason` | duplicate user or invalid input |
 | CLI change password success | KOPDS | `cmd/kopds/main_test.go` | INFO | `username`, `operation`, `source` | |
+| CLI change password failure | KOPDS | manual test (invalid user) | WARN | `username`, `operation`, `source`, `reason` | |
 | CLI delete user success | KOPDS | `cmd/kopds/main_test.go` | INFO | `username`, `operation`, `source` | |
-| CLI create user success | KOSYNC | `cmd/kosync/main_test.go` | INFO | `username`, `operation`, `source` | If supported by CLI tests |
+| CLI delete user failure | KOPDS | manual test (invalid user) | WARN | `username`, `operation`, `source`, `reason` | |
+| CLI create user success | KOSYNC | `cmd/kosync/main_test.go` | INFO | `username`, `operation`, `source` | |
+| CLI create user failure | KOSYNC | `cmd/kosync/main_test.go` | WARN | `username`, `operation`, `source`, `reason` | |
+| CLI change password success | KOSYNC | `cmd/kosync/main_test.go` | INFO | `username`, `operation`, `source` | |
+| CLI delete user success | KOSYNC | `cmd/kosync/main_test.go` | INFO | `username`, `operation`, `source` | |
 | Handler request success | KOPDS | `internal/api` tests or integration | INFO | `method`, `path`, `status_code`, `duration`, `request_id` | 2xx/3xx response |
 | Handler request client error | KOPDS | `internal/api` tests | WARN | `method`, `path`, `status_code`, `duration`, `error_reason` | 4xx response |
 | Handler request server error | KOPDS | `internal/api` tests | ERROR | `method`, `path`, `status_code`, `duration`, `error_detail` | 5xx response |
@@ -184,6 +189,12 @@ At the beginning of work on each step, prior to making any changes to any code, 
 | Shutdown signal | KOSYNC | manual signal test | INFO | `signal_name`, `reason`, `uptime` | graceful shutdown |
 | Auth failure | KOSYNC | `internal/api` auth tests | WARN | `username`, `remote_addr`, `reason` | |
 | Progress update success | KOSYNC | `internal/api` tests | INFO | `username`, `document`, `percentage`, `status` | |
+| Progress update skipped | KOSYNC | `internal/database` tests | DEBUG | `username`, `document`, `reason` | Older timestamp |
+| Book scan started | KOPDS | `internal/scanner` tests | INFO | `library_path`, `scan_type` | |
+| Book scan completed | KOPDS | `internal/scanner` tests | INFO | `library_path`, `books_found`, `duration` | |
+| Book scan failed | KOPDS | `internal/scanner` tests | ERROR | `library_path`, `error_detail` | |
+| Config loaded | KOPDS | `go test ./cmd/kopds` | INFO | `config_source`, `database_path` | |
+| Config loaded | KOSYNC | `go test ./cmd/kosync` | INFO | `config_source`, `database_path` | |
 
 - [ ] **7.2 Run Full Logging Integration Tests**: Execute real logging scenarios in both projects.
   - Run `kopds/test/integration_test.sh` and `kosync/test/integration_test.sh` with `LOG_LEVEL=INFO` and `LOG_LEVEL=DEBUG` to capture operational logs.
