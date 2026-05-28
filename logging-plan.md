@@ -212,22 +212,22 @@ At the beginning of work on each step, prior to making any changes to any code, 
 
 **Objective**: Confirm logging is comprehensive, uniform, and production-ready.
 
-- [ ] **8.1 Logging Coverage Audit**: Re-run the logging matrix and ensure every operation class has coverage.
+- [x] **8.1 Logging Coverage Audit**: Re-run the logging matrix and ensure every operation class has coverage.
   - Compare event coverage from middleware, CLI, handlers, and maintenance paths across both projects.
   - Confirm there are no missing business events such as startup, shutdown, auth failure, progress update, cache miss, or storage-cap enforcement.
-- [ ] **8.2 Uniformity Audit**: Compare equivalent log output across both projects.
+- [x] **8.2 Uniformity Audit**: Compare equivalent log output across both projects.
   - Check that shared operations emit the same field names and severity levels in both `kopds` and `kosync`.
   - Record any intentional differences, especially where KOPDS has book/image operations that KOSYNC does not.
-- [ ] **8.3 Run All Tests**: Execute `go test ./...` in both projects and confirm logging-related tests pass.
+- [x] **8.3 Run All Tests**: Execute `go test ./...` in both projects and confirm logging-related tests pass.
   - Run `go test ./...` in `kopds/` and `kosync/` from the repository root or each project directory.
   - Treat logging regressions as blocking failures.
-- [ ] **8.4 Performance Check**: Verify logging overhead remains acceptable.
+- [x] **8.4 Performance Check**: Verify logging overhead remains acceptable.
   - Measure request timings with middleware enabled and compare them against baseline runs to ensure added structured logging does not introduce significant latency.
   - Focus on the request completion path in `LoggingMiddleware` and repeated JSON/text handler logs.
-- [ ] **8.5 Update AGENTS.md Files**: Update agent guidance to reflect `log/slog`.
+- [x] **8.5 Update AGENTS.md Files**: Update agent guidance to reflect `log/slog`.
   - Change the logging references in `kopds/AGENTS.md` and `kosync/AGENTS.md` from `rs/zerolog` to `log/slog`.
   - Add a short note that startup, request, CLI, and maintenance logs should follow the shared `log/slog` field conventions.
-- [ ] **8.6 Final Documentation**: Update the broader planning docs.
+- [x] **8.6 Final Documentation**: Update the broader planning docs.
   - Update [uniformity-plan.md](uniformity-plan.md) to reflect logging standardization completion.
   - Update [todo.md](todo.md) to mark all logging-related phases complete once the work is finished.
 

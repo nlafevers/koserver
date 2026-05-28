@@ -108,3 +108,11 @@ At the beginning of work on each step, prior to making any changes to any code, 
 ## 5. Follow-On Work: Logging Refactor
 
 After completion of the uniformity plan phases, a comprehensive logging refactor is planned. See [logging-plan.md](logging-plan.md) for the detailed strategy. This work standardizes logging coverage and format across both projects to ensure all operations generate appropriate log entries for operational visibility and troubleshooting.
+
+### Phase 8: Comprehensive Logging Standardization
+
+- [x] **8.1 Standardize HTTP Middleware Logging**: Identical LoggingMiddleware capturing request_id, status codes, duration, and error details in both projects.
+- [x] **8.2 Standardize CLI Logging**: Identical success/failure logging helpers with source="CLI".
+- [x] **8.3 Standardize Handler/Service Logging**: Uniform INFO for business events and DEBUG for diagnostics across all layers.
+- [x] **8.4 Standardize Storage Maintenance Logging**: Uniform logging for storage-cap enforcement and database pruning.
+- [x] **8.5 Document Logging Strategy**: Updated READMEs and AGENTS.md files with identical logging guidance.
