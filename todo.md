@@ -6,8 +6,25 @@ At the beginning of work on each step, prior to making any changes to any code, 
 
 ## Testing
 
-- [ ] Develop a procedure for testing the storage cap for both KOPDS and KOSYNC.
-- [ ] Develop a procedure for testing that progress updates (`PUT`) in KOSYNC with newer timestamps override, but older timestamps do not.
+### Storage Cap Enforcement
+- [ ] **Verify Storage Cap in KOPDS**: Implement an integration test in `kopds/internal/database/storage_cap_integration_test.go` that:
+  - Initializes a real SQLite database.
+  - Bloats the `sync_state` table with enough dummy records to exceed a 1MB limit.
+  - Calls `EnforceStorageCap` with `capMB=1`.
+  - Asserts that records were deleted and the physical file size decreased via `VACUUM`.
+- [ ] **Verify Storage Cap in KOSYNC**: Implement a matching integration test in `kosync/internal/database/storage_cap_integration_test.go` that:
+  - Initializes a real SQLite database.
+  - Bloats the `progress` table to exceed a 1MB limit.
+  - Calls `EnforceStorageCap` with `capMB=1`.
+  - Asserts that records were deleted and the physical file size decreased.
+
+### KOSYNC Progress Synchronization
+- [ ] **Refactor Handler to respect timestamps**: Modify `HandleUpdateProgress` in `kosync/internal/api/handlers.go` to only overwrite the incoming timestamp with `time.Now().Unix()` if the provided timestamp is `0`. This allows clients to provide their own event ordering.
+- [ ] **Verify Conflict Resolution**: Add `TestProgressTimestampConflict` to `kosync/internal/api/handlers_test.go` that performs the following sequence:
+  - `PUT` a progress record with `timestamp=1000` and `percentage=0.5`.
+  - `PUT` the same record with `timestamp=900` and `percentage=0.4` (Verify `GET` still returns `0.5`).
+  - `PUT` the same record with `timestamp=1100` and `percentage=0.6` (Verify `GET` now returns `0.6`).
+  - `PUT` the same record with `timestamp=1100` and `percentage=0.7` (Verify `GET` still returns `0.6` to confirm strictly greater-than logic).
 
 
 ## HTTP Routing
