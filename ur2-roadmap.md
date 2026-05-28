@@ -162,7 +162,7 @@ Acceptance criteria for Phase 2:
 
 Goal: make the command-line user management code as identical as practical.
 
-- [ ] **3.1 Add KOPDS storage lifecycle wrappers**
+- [ ] **UR2-3.1 Add KOPDS storage lifecycle wrappers**
   1. Open `/home/nathan/koserver/kopds/internal/database/sqlite.go`.
   2. Add a function named `InitDB(path string, allowCreate bool) (*Storage, error)` that mirrors KOSYNC:
      - Call `OpenSQLite(path, allowCreate)`.
@@ -176,13 +176,8 @@ Goal: make the command-line user management code as identical as practical.
      ```bash
      GOCACHE=/tmp/kopds-gocache go test ./internal/database ./cmd/kopds
      ```
-  6. Commit in KOPDS:
-     ```bash
-     git add internal/database/sqlite.go
-     git commit -m "Add uniform database lifecycle wrapper"
-     ```
 
-- [ ] **3.2 Add KOPDS storage user methods**
+- [ ] **UR2-3.2 Add KOPDS storage user methods**
   1. Open `/home/nathan/koserver/kopds/internal/database/sqlite.go` and `/home/nathan/koserver/kopds/internal/database/user_repository.go`.
   2. Add storage methods with these exact names where possible:
      - `CreateUserIfNotExists(username, password string) error`
@@ -197,13 +192,8 @@ Goal: make the command-line user management code as identical as practical.
      ```bash
      GOCACHE=/tmp/kopds-gocache go test ./internal/database ./cmd/kopds
      ```
-  7. Commit in KOPDS:
-     ```bash
-     git add internal/database
-     git commit -m "Add uniform storage user operations"
-     ```
 
-- [ ] **3.3 Rename or wrap KOSYNC password update**
+- [ ] **UR2-3.3 Rename or wrap KOSYNC password update**
   1. Open `/home/nathan/koserver/kosync/internal/database/sqlite.go`.
   2. Add a method named `UpdatePassword(username, passwordHash string) error`.
   3. Move the body of `UpdateUserPassword` into `UpdatePassword`, or have `UpdateUserPassword` call `UpdatePassword`.
@@ -213,13 +203,8 @@ Goal: make the command-line user management code as identical as practical.
      ```bash
      GOCACHE=/tmp/kosync-gocache go test ./internal/database ./cmd/kosync
      ```
-  7. Commit in KOSYNC:
-     ```bash
-     git add internal/database cmd/kosync
-     git commit -m "Use uniform password update method"
-     ```
 
-- [ ] **3.4 Make CLI functions copy-paste similar**
+- [ ] **UR2-3.4 Make CLI functions copy-paste similar**
   1. Open both entrypoints side by side:
      - `/home/nathan/koserver/kopds/cmd/kopds/main.go`
      - `/home/nathan/koserver/kosync/cmd/kosync/main.go`
@@ -243,10 +228,7 @@ Goal: make the command-line user management code as identical as practical.
      cd /home/nathan/koserver/kosync
      GOCACHE=/tmp/kosync-gocache go test ./cmd/kosync ./internal/database
      ```
-  7. Commit in each app repo separately with:
-     ```bash
-     git commit -m "Standardize CLI user management"
-     ```
+  7. Commit in each app repo separately.
 
 Acceptance criteria for Phase 3:
 
@@ -258,7 +240,7 @@ Acceptance criteria for Phase 3:
 
 Goal: make server startup, shutdown, logging, and shared middleware behavior easier to compare.
 
-- [ ] **4.1 Extract KOSYNC `runServer`**
+- [ ] **UR2-4.1 Extract KOSYNC `runServer`**
   1. Open `/home/nathan/koserver/kosync/cmd/kosync/main.go`.
   2. Change `main()` so it matches KOPDS:
      - Load config.
@@ -272,13 +254,8 @@ Goal: make server startup, shutdown, logging, and shared middleware behavior eas
      ```bash
      GOCACHE=/tmp/kosync-gocache go test ./cmd/kosync ./internal/api
      ```
-  7. Commit in KOSYNC:
-     ```bash
-     git add cmd/kosync/main.go cmd/kosync/*_test.go
-     git commit -m "Align server lifecycle structure"
-     ```
 
-- [ ] **4.2 Add KOSYNC config validation**
+- [ ] **UR2-4.2 Add KOSYNC config validation**
   1. Open `/home/nathan/koserver/kosync/internal/config/config.go`.
   2. Add `func (c *Config) Validate() error`.
   3. Validate:
@@ -292,13 +269,8 @@ Goal: make server startup, shutdown, logging, and shared middleware behavior eas
      ```bash
      GOCACHE=/tmp/kosync-gocache go test ./internal/config ./cmd/kosync
      ```
-  7. Commit in KOSYNC:
-     ```bash
-     git add internal/config cmd/kosync
-     git commit -m "Validate KOSYNC configuration"
-     ```
 
-- [ ] **4.3 Standardize request ID generation**
+- [ ] **UR2-4.3 Standardize request ID generation**
   1. Open both middleware files:
      - `kopds/internal/api/middleware.go`
      - `kosync/internal/api/middleware.go`
@@ -311,23 +283,17 @@ Goal: make server startup, shutdown, logging, and shared middleware behavior eas
   4. Keep the function name identical.
   5. Add or update middleware tests to confirm `request_id` exists and is non-empty.
   6. Run API tests in both repos.
-  7. Commit separately in each repo with:
-     ```bash
-     git commit -m "Standardize request ID generation"
-     ```
+  7. Commit separately in each repo.
 
-- [ ] **4.4 Enable SQLite foreign keys uniformly**
+- [ ] **UR2-4.4 Enable SQLite foreign keys uniformly**
   1. Open both `internal/database/sqlite.go` files.
   2. Find the `PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;` statement.
   3. Add `PRAGMA foreign_keys=ON;` to the same initialization flow.
   4. Add a test in each app that proves a foreign-key violation fails.
   5. Run database tests in both repos.
-  6. Commit separately with:
-     ```bash
-     git commit -m "Enable SQLite foreign key enforcement"
-     ```
+  6. Commit separately in each repo.
 
-- [ ] **4.5 Move disabled storage-cap check to the top**
+- [ ] **UR2-4.5 Move disabled storage-cap check to the top**
   1. Open both `internal/database/sqlite.go` files.
   2. In `Storage.EnforceStorageCap`, add this as the first logic after getting the logger:
      ```go
@@ -338,10 +304,7 @@ Goal: make server startup, shutdown, logging, and shared middleware behavior eas
   3. Keep `enforceStorageCap` helper behavior identical.
   4. Add or update tests proving disabled caps do not inspect a missing file.
   5. Run database tests in both repos.
-  6. Commit separately with:
-     ```bash
-     git commit -m "Skip storage cap work when disabled"
-     ```
+  6. Commit separately in each repo.
 
 Acceptance criteria for Phase 4:
 
@@ -354,7 +317,7 @@ Acceptance criteria for Phase 4:
 
 Goal: reduce public attack surface and make KOSYNC protocol responses consistent.
 
-- [ ] **5.1 Disable KOSYNC public registration by default**
+- [ ] **UR2-5.1 Disable KOSYNC public registration by default**
   1. Open `/home/nathan/koserver/kosync/internal/config/config.go`.
   2. Change the default for `disable_registration` from `false` to `true`.
   3. Open `/home/nathan/koserver/kosync/config/config.yaml`.
@@ -367,13 +330,8 @@ Goal: reduce public attack surface and make KOSYNC protocol responses consistent
      ```bash
      GOCACHE=/tmp/kosync-gocache go test ./internal/config ./internal/api
      ```
-  10. Commit in KOSYNC:
-      ```bash
-      git add internal/config config deploy README.md internal/api
-      git commit -m "Disable public registration by default"
-      ```
 
-- [ ] **5.2 Wire KOSYNC rate limiting**
+- [ ] **UR2-5.2 Wire KOSYNC rate limiting**
   1. Open `/home/nathan/koserver/kosync/internal/config/config.go`.
   2. Add config fields:
      - `RateLimitEnabled bool`
@@ -399,13 +357,8 @@ Goal: reduce public attack surface and make KOSYNC protocol responses consistent
       ```bash
       GOCACHE=/tmp/kosync-gocache go test ./internal/api ./cmd/kosync
       ```
-  12. Commit in KOSYNC:
-      ```bash
-      git add internal/config internal/api cmd/kosync config README.md deploy
-      git commit -m "Enable KOSYNC request rate limiting"
-      ```
 
-- [ ] **5.3 Add equivalent KOPDS failed-auth rate limiting**
+- [ ] **UR2-5.3 Add equivalent KOPDS failed-auth rate limiting**
   1. Open `/home/nathan/koserver/kopds/internal/config/config.go`.
   2. Add the same rate-limit config fields and defaults as KOSYNC.
   3. Open `/home/nathan/koserver/kopds/internal/api/middleware.go`.
@@ -416,13 +369,8 @@ Goal: reduce public attack surface and make KOSYNC protocol responses consistent
      ```bash
      GOCACHE=/tmp/kopds-gocache go test ./internal/api ./internal/config ./cmd/kopds
      ```
-  8. Commit in KOPDS:
-     ```bash
-     git add internal/config internal/api cmd/kopds config README.md deploy
-     git commit -m "Add Basic Auth rate limiting"
-     ```
 
-- [ ] **5.4 Fix KOSYNC response content type**
+- [ ] **UR2-5.4 Fix KOSYNC response content type**
   1. Open `/home/nathan/koserver/kosync/internal/api/handlers.go`.
   2. In `HandleAuth`, remove `w.Header().Set("Content-Type", "application/json")`.
   3. Open `/home/nathan/koserver/kosync/cmd/kosync/main.go`.
@@ -435,13 +383,8 @@ Goal: reduce public attack surface and make KOSYNC protocol responses consistent
      ```bash
      GOCACHE=/tmp/kosync-gocache go test ./internal/api ./cmd/kosync
      ```
-  7. Commit in KOSYNC:
-     ```bash
-     git add internal/api cmd/kosync
-     git commit -m "Use KOReader MIME type consistently"
-     ```
 
-- [ ] **5.5 Make KOSYNC registration timing less distinguishable**
+- [ ] **UR2-5.5 Make KOSYNC registration timing less distinguishable**
   1. Open `/home/nathan/koserver/kosync/internal/api/handlers.go`.
   2. Find `randomDelay`.
   3. Use the same delay path for new registrations and duplicate registrations.
@@ -451,11 +394,6 @@ Goal: reduce public attack surface and make KOSYNC protocol responses consistent
   7. Run:
      ```bash
      GOCACHE=/tmp/kosync-gocache go test ./internal/api ./internal/database
-     ```
-  8. Commit in KOSYNC:
-     ```bash
-     git add internal/api
-     git commit -m "Harden registration timing behavior"
      ```
 
 Acceptance criteria for Phase 5:
@@ -469,7 +407,7 @@ Acceptance criteria for Phase 5:
 
 Goal: fix confirmed KOPDS bugs and reduce unnecessary query work.
 
-- [ ] **6.1 Fix KOPDS author listing query**
+- [ ] **UR2-6.1 Fix KOPDS author listing query**
   1. Open `/home/nathan/koserver/kopds/internal/database/book_repository.go`.
   2. Find `ListByAuthor`.
   3. In the SQL query, change the join from:
@@ -486,13 +424,8 @@ Goal: fix confirmed KOPDS bugs and reduce unnecessary query work.
      ```bash
      GOCACHE=/tmp/kopds-gocache go test ./internal/database ./internal/api
      ```
-  7. Commit in KOPDS:
-     ```bash
-     git add internal/database
-     git commit -m "Fix author book listing query"
-     ```
 
-- [ ] **6.2 Validate KOPDS path IDs**
+- [ ] **UR2-6.2 Validate KOPDS path IDs**
   1. Open `/home/nathan/koserver/kopds/internal/api/handlers.go`.
   2. Add a helper named `parsePositiveID(value string) (int64, error)`.
   3. The helper should:
@@ -512,13 +445,8 @@ Goal: fix confirmed KOPDS bugs and reduce unnecessary query work.
      ```bash
      GOCACHE=/tmp/kopds-gocache go test ./internal/api
      ```
-  8. Commit in KOPDS:
-     ```bash
-     git add internal/api
-     git commit -m "Validate OPDS path identifiers"
-     ```
 
-- [ ] **6.3 Check row iteration errors**
+- [ ] **UR2-6.3 Check row iteration errors**
   1. Open `/home/nathan/koserver/kopds/internal/database/book_repository.go`.
   2. In `Search`, after iterating rows and before using the IDs, check:
      ```go
@@ -532,13 +460,8 @@ Goal: fix confirmed KOPDS bugs and reduce unnecessary query work.
      ```bash
      GOCACHE=/tmp/kopds-gocache go test ./internal/database
      ```
-  6. Commit in KOPDS:
-     ```bash
-     git add internal/database/book_repository.go
-     git commit -m "Check book row iteration errors"
-     ```
 
-- [ ] **6.4 Remove duplicate KOPDS reindex helper**
+- [ ] **UR2-6.4 Remove duplicate KOPDS reindex helper**
   1. Open `/home/nathan/koserver/kopds/internal/database/book_repository.go`.
   2. Compare method `func (r *sqliteBookRepository) ReindexBook(...)` with package function `func ReindexBook(...)`.
   3. If the package function is unused, delete it.
@@ -547,13 +470,8 @@ Goal: fix confirmed KOPDS bugs and reduce unnecessary query work.
      ```bash
      GOCACHE=/tmp/kopds-gocache go test ./internal/database ./internal/scanner
      ```
-  6. Commit in KOPDS:
-     ```bash
-     git add internal/database/book_repository.go
-     git commit -m "Deduplicate book reindexing logic"
-     ```
 
-- [ ] **6.5 Escape Calibre SQLite read-only DSN**
+- [ ] **UR2-6.5 Escape Calibre SQLite read-only DSN**
   1. Open `/home/nathan/koserver/kopds/internal/scanner/calibre_reader.go`.
   2. Find:
      ```go
@@ -565,13 +483,8 @@ Goal: fix confirmed KOPDS bugs and reduce unnecessary query work.
      ```bash
      GOCACHE=/tmp/kopds-gocache go test ./internal/scanner
      ```
-  6. Commit in KOPDS:
-     ```bash
-     git add internal/scanner
-     git commit -m "Escape Calibre database URI"
-     ```
 
-- [ ] **6.6 Batch hydrate listed books**
+- [ ] **UR2-6.6 Batch hydrate listed books**
   1. Open `/home/nathan/koserver/kopds/internal/database/book_repository.go`.
   2. Find `listBooks` and `Search`.
   3. Notice they first fetch IDs and then call `GetByID` once per book.
@@ -582,11 +495,6 @@ Goal: fix confirmed KOPDS bugs and reduce unnecessary query work.
   8. Run:
      ```bash
      GOCACHE=/tmp/kopds-gocache go test ./internal/database ./internal/api
-     ```
-  9. Commit in KOPDS:
-     ```bash
-     git add internal/database
-     git commit -m "Batch load listed books"
      ```
 
 Acceptance criteria for Phase 6:
@@ -600,7 +508,7 @@ Acceptance criteria for Phase 6:
 
 Goal: make KOSYNC sync behavior more observable and avoid unnecessary maintenance work.
 
-- [ ] **7.1 Report stale progress updates**
+- [ ] **UR2-7.1 Report stale progress updates**
   1. Open `/home/nathan/koserver/kosync/internal/database/sqlite.go`.
   2. Change `UpsertProgress` so callers can tell whether a row was inserted or updated.
   3. One simple approach is to return `(bool, error)` where `true` means the row changed.
@@ -615,13 +523,8 @@ Goal: make KOSYNC sync behavior more observable and avoid unnecessary maintenanc
      ```bash
      GOCACHE=/tmp/kosync-gocache go test ./internal/database ./internal/api
      ```
-  8. Commit in KOSYNC:
-     ```bash
-     git add internal/database internal/api
-     git commit -m "Report stale progress updates"
-     ```
 
-- [ ] **7.2 Skip storage cap checks when progress did not change**
+- [ ] **UR2-7.2 Skip storage cap checks when progress did not change**
   1. Open `/home/nathan/koserver/kosync/internal/api/handlers.go`.
   2. Use the changed/unchanged result from `UpsertProgress`.
   3. Only call `storage.EnforceStorageCap` when a row was inserted or updated.
@@ -630,13 +533,8 @@ Goal: make KOSYNC sync behavior more observable and avoid unnecessary maintenanc
      ```bash
      GOCACHE=/tmp/kosync-gocache go test ./internal/api
      ```
-  6. Commit in KOSYNC:
-     ```bash
-     git add internal/api internal/database
-     git commit -m "Skip storage cap for stale progress updates"
-     ```
 
-- [ ] **7.3 Add progress timestamp index**
+- [ ] **UR2-7.3 Add progress timestamp index**
   1. Open `/home/nathan/koserver/kosync/internal/database/sqlite.go`.
   2. In `Migrate`, after creating the `progress` table, add:
      ```sql
@@ -646,11 +544,6 @@ Goal: make KOSYNC sync behavior more observable and avoid unnecessary maintenanc
   4. Run:
      ```bash
      GOCACHE=/tmp/kosync-gocache go test ./internal/database
-     ```
-  5. Commit in KOSYNC:
-     ```bash
-     git add internal/database
-     git commit -m "Index progress timestamps"
      ```
 
 Acceptance criteria for Phase 7:
@@ -663,7 +556,7 @@ Acceptance criteria for Phase 7:
 
 Goal: make the public project shape and documentation match the final behavior.
 
-- [ ] **8.1 Change KOSYNC module path**
+- [ ] **UR2-8.1 Change KOSYNC module path**
   1. Open `/home/nathan/koserver/kosync/go.mod`.
   2. Change:
      ```go
@@ -678,13 +571,8 @@ Goal: make the public project shape and documentation match the final behavior.
      ```bash
      GOCACHE=/tmp/kosync-gocache go test ./...
      ```
-  5. Commit in KOSYNC:
-     ```bash
-     git add .
-     git commit -m "Use canonical module path"
-     ```
 
-- [ ] **8.2 Update app documentation**
+- [ ] **UR2-8.2 Update app documentation**
   1. Open both app READMEs.
   2. Update Go version requirements.
   3. Update rate-limit configuration references.
@@ -693,7 +581,7 @@ Goal: make the public project shape and documentation match the final behavior.
   6. Update examples in `config/config.yaml` and `deploy/docker-compose.yml`.
   7. Commit documentation changes separately in each app repo.
 
-- [ ] **8.3 Update uniformity inventories**
+- [ ] **UR2-8.3 Update uniformity inventories**
   1. Open:
      - `/home/nathan/koserver/kopds/UNIFORMITY.md`
      - `/home/nathan/koserver/kosync/UNIFORMITY.md`
@@ -706,24 +594,15 @@ Goal: make the public project shape and documentation match the final behavior.
      - storage-cap disabled check.
   3. Add final audit notes for intentional differences.
   4. Keep the two files as close to identical as practical.
-  5. Commit in each app repo:
-     ```bash
-     git add UNIFORMITY.md
-     git commit -m "Update uniformity inventory"
-     ```
+  5. Commit in each app repo.
 
-- [ ] **8.4 Update root uniformity plan**
+- [ ] **UR2-8.4 Update root uniformity plan**
   1. Open `/home/nathan/koserver/uniformity-plan.md`.
   2. Keep the completed historical checklist intact or clearly mark it as the previous round.
   3. Add a short pointer to this roadmap.
   4. Do not duplicate every instruction from this file unless desired.
-  5. Commit in the KOSERVER root repo:
-     ```bash
-     git add uniformity-plan.md implementation-roadmap.md
-     git commit -m "Add fresh uniformity implementation roadmap"
-     ```
 
-- [ ] **8.5 Strengthen integration tests**
+- [ ] **UR2-8.5 Strengthen integration tests**
   1. Open both integration scripts:
      - `/home/nathan/koserver/kopds/test/integration_test.sh`
      - `/home/nathan/koserver/kosync/test/integration_test.sh`
@@ -748,11 +627,11 @@ Acceptance criteria for Phase 8:
 - Uniformity inventories are current.
 - Integration tests check status codes and MIME behavior.
 
-## Final Verification Checklist
+## Phase 9: Final Verification Checklist
 
 Run this only after all phases are done.
 
-- [ ] **Final KOPDS verification**
+- [ ] **UR2-9.1 Final KOPDS verification**
   1. Open `/home/nathan/koserver/kopds`.
   2. Run:
      ```bash
@@ -764,7 +643,7 @@ Run this only after all phases are done.
      ```
   3. Confirm all commands pass.
 
-- [ ] **Final KOSYNC verification**
+- [ ] **UR2--9.2 Final KOSYNC verification**
   1. Open `/home/nathan/koserver/kosync`.
   2. Run:
      ```bash
@@ -776,14 +655,13 @@ Run this only after all phases are done.
      ```
   3. Confirm all commands pass.
 
-- [ ] **Final root documentation verification**
+- [ ] **UR2-9.3 Final root documentation verification**
   1. Open `/home/nathan/koserver`.
   2. Run:
      ```bash
      git status --short
      ```
   3. Confirm only intentional root documentation files are changed.
-  4. Commit root documentation changes in the KOSERVER repo.
 
 ## Notes For Future Implementers
 
