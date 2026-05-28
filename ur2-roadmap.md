@@ -1,29 +1,10 @@
-# KOPDS/KOSYNC Uniformity Implementation Roadmap
+# Uniformity Round 2 Implementation Roadmap
 
 This roadmap records the next round of work for bringing KOPDS and KOSYNC closer together while also fixing security, edge-case, test, bloat, and performance issues found during the fresh audit.
 
 KOSERVER is documentation only. KOPDS and KOSYNC are separate Git repositories inside this workspace. Code changes inside `kopds/` must be committed in the KOPDS repository. Code changes inside `kosync/` must be committed in the KOSYNC repository. Changes to this roadmap or other root documentation must be committed in the KOSERVER repository.
 
 ## How To Use This Roadmap
-
-Work slowly and commit often. Each checkbox below is intended to be small enough that a novice programmer can complete it, test it, and commit it before moving on.
-
-Before starting a checkbox, change `[ ]` to `[-]` so it is clear what was in progress if work is interrupted. After the change is complete, tests pass, and the change has been committed in the correct repository, change `[-]` to `[x]`.
-
-Use these commands often:
-
-```bash
-# From the KOSERVER root, check the documentation repo.
-git status --short
-
-# From KOPDS.
-cd /home/nathan/koserver/kopds
-git status --short
-
-# From KOSYNC.
-cd /home/nathan/koserver/kosync
-git status --short
-```
 
 When running Go commands in this workspace, prefer a writable cache under `/tmp`:
 
@@ -54,7 +35,7 @@ Do not copy commits across repositories. If you edit a KOPDS file, commit from `
 
 Goal: make both repositories mechanically clean before behavioral changes.
 
-- [ ] **1.1 Format KOPDS**
+- [x] **UR2-1.1 Format KOPDS**
   1. Open a terminal in `/home/nathan/koserver/kopds`.
   2. Run:
      ```bash
@@ -69,13 +50,8 @@ Goal: make both repositories mechanically clean before behavioral changes.
      ```bash
      GOCACHE=/tmp/kopds-gocache go test ./...
      ```
-  6. Commit in the KOPDS repo with:
-     ```bash
-     git add .
-     git commit -m "Format Go source"
-     ```
 
-- [ ] **1.2 Format KOSYNC**
+- [x] **UR2-1.2 Format KOSYNC**
   1. Open a terminal in `/home/nathan/koserver/kosync`.
   2. Run:
      ```bash
@@ -90,13 +66,8 @@ Goal: make both repositories mechanically clean before behavioral changes.
      ```bash
      GOCACHE=/tmp/kosync-gocache go test ./...
      ```
-  6. Commit in the KOSYNC repo with:
-     ```bash
-     git add .
-     git commit -m "Format Go source"
-     ```
 
-- [ ] **1.3 Tidy KOPDS dependencies**
+- [x] **UR2-1.3 Tidy KOPDS dependencies**
   1. Open `/home/nathan/koserver/kopds/go.mod`.
   2. Confirm `github.com/go-chi/chi/v5` is still listed.
   3. Run:
@@ -108,13 +79,8 @@ Goal: make both repositories mechanically clean before behavioral changes.
      ```bash
      GOCACHE=/tmp/kopds-gocache go test ./...
      ```
-  6. Commit in KOPDS with:
-     ```bash
-     git add go.mod go.sum
-     git commit -m "Remove unused chi dependency"
-     ```
 
-- [ ] **1.4 Confirm KOSYNC dependencies are tidy**
+- [x] **UR2-1.4 Confirm KOSYNC dependencies are tidy**
   1. Open a terminal in `/home/nathan/koserver/kosync`.
   2. Run:
      ```bash
@@ -124,12 +90,9 @@ Goal: make both repositories mechanically clean before behavioral changes.
      ```bash
      git diff -- go.mod go.sum
      ```
-  4. If there are no changes, do not commit.
-  5. If there are changes, run tests and commit them in KOSYNC:
+  4. If there are changes, run tests:
      ```bash
      GOCACHE=/tmp/kosync-gocache go test ./...
-     git add go.mod go.sum
-     git commit -m "Tidy module dependencies"
      ```
 
 Acceptance criteria for Phase 1:
@@ -142,7 +105,7 @@ Acceptance criteria for Phase 1:
 
 Goal: fix the Go standard library vulnerability and make release automation match both projects.
 
-- [ ] **2.1 Update Go versions in KOPDS**
+- [ ] **UR2-2.1 Update Go versions in KOPDS**
   1. Open `/home/nathan/koserver/kopds/go.mod`.
   2. Keep the `go` directive at the project-required version unless the project owner decides to raise it. The immediate vulnerability fix is in the build toolchain, not necessarily the module directive.
   3. Open `/home/nathan/koserver/kopds/.github/workflows/publish-binaries.yml`.
@@ -164,7 +127,7 @@ Goal: fix the Go standard library vulnerability and make release automation matc
       git commit -m "Update Go release toolchain"
       ```
 
-- [ ] **2.2 Update Go versions in KOSYNC**
+- [ ] **UR2-2.2 Update Go versions in KOSYNC**
   1. Repeat the same toolchain update in `/home/nathan/koserver/kosync`.
   2. Update `.github/workflows/publish-binaries.yml`.
   3. Update `build/Dockerfile`.
@@ -179,7 +142,7 @@ Goal: fix the Go standard library vulnerability and make release automation matc
      git commit -m "Update Go release toolchain"
      ```
 
-- [ ] **2.3 Fix Docker publish workflows**
+- [ ] **UR2-2.3 Fix Docker publish workflows**
   1. Open `/home/nathan/koserver/kopds/.github/workflows/docker-publish.yml`.
   2. Under the `docker/build-push-action` `with:` block, add:
      ```yaml
@@ -196,7 +159,7 @@ Goal: fix the Go standard library vulnerability and make release automation matc
      git commit -m "Use build Dockerfile in publish workflow"
      ```
 
-- [ ] **2.4 Fix KOSYNC binary release workflow**
+- [ ] **UR2-2.4 Fix KOSYNC binary release workflow**
   1. Open `/home/nathan/koserver/kosync/.github/workflows/publish-binaries.yml`.
   2. Find the line that sets `BINARY_NAME="kopds-${{ matrix.goos }}-${{ matrix.goarch }}"`.
   3. Change `kopds` to `kosync`.
