@@ -202,10 +202,10 @@ At the beginning of work on each step, prior to making any changes to any code, 
 - [x] **7.3 Test Docker Logging**: Exercise containerized logging paths.
   - Use `build/Dockerfile`, `deploy/docker-compose.yml`, and the existing container entrypoints to confirm `docker logs` shows startup, request, and failure logs with the configured log level.
   - Capture both plain text and JSON modes if the container configuration allows them.
-- [-] **7.4 Update READMEs**: Document operator-facing logging behavior.
+- [x] **7.4 Update READMEs**: Document operator-facing logging behavior.
   - Update `kopds/README.md` and `kosync/README.md` with examples of healthy vs. unhealthy log patterns, common `LOG_LEVEL` usage, and how to interpret `WARN`/`ERROR` entries.
   - Add troubleshooting notes for missing logs, storage-cap pruning, and shutdown failures.
-- [ ] **7.5 Update GEMINI Files**: Document the logging strategy in both project guides.
+- [x] **7.5 Update GEMINI Files**: Document the logging strategy in both project guides.
   - Update `kopds/GEMINI.md` and `kosync/GEMINI.md` so they describe the `log/slog` strategy, expected log levels, and operator guidance.
 
 ### Phase 8: Final Verification
