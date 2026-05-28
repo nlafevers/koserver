@@ -13,47 +13,43 @@ First, always check for project-specific commit conventions by searching for "co
 
 ## Workflow
 
-1. Identify the root directory of the repository in which you made changes.  Some workspaces may have nested repositories with either loose or defined submodules.  Make sure you are in the correct repository before committing.  If you aren't sure, check `AGENTS.md`, or similar files, in the workspace root to learn about the git repository structure.  Additionally, if `cd` does not persist between tool calls, you will need to chain the `cd` command with each subsequent git command shown in steps 2-5.
+1. Identify the root directory of the repository in which you made changes.  Some workspaces may have nested repositories with either loose or defined submodules.  If you aren't sure, check `AGENTS.md`, or similar files, in the workspace root to learn about the git repository structure.  If you made changes to files in multiple repositories, you will need to create a separate commit for each repository, starting this workflow over at Step 1 for each commit.
     ```bash
-    cd <path-to-repo>
-    # or 
     export REPO_DIR=$(git -C "$(dirname "<absolute-path-to-file>")" rev-parse --show-toplevel)
-    # then add the following in front of each git command in steps 2-5:
-    git -C "$REPO_DIR" <git-command>
     ```
 2. Review the changes you made.
     ```bash
-    git status
-    git --no-pager diff --staged  # if already staged
-    git --no-pager diff           # if not staged
+    git -C "$REPO_DIR" status
+    git -C "$REPO_DIR" --no-pager diff --staged  # if already staged
+    git -C "$REPO_DIR" --no-pager diff           # if not staged
     ```
 3. Stage the files you made changes to if they are not listed in `.gitignore`.  **NEVER commit**: `.env`, `.venv`, `credentials.json`, secrets, or large binary files without explicit approval.
     ```bash
-    git add <specific-files>  # preferred
+    git -C "$REPO_DIR" add <specific-files>  # preferred
     # or
-    git add -A  # all changes
+    git -C "$REPO_DIR" add -A  # all changes
     ```
 4. Create the commit using `type(scope): subject` format.  See below for `type` options, `scope` rules, and subject line rules.
     **Simple change (without body)**:
     ```bash
-    git commit -m "type(scope): subject"
+    git -C "$REPO_DIR" commit -m "type(scope): subject"
     ```
     
     **Complex change (with body)**:
     ```bash
-    cat << 'EOF' > .git/agent_commit_msg.txt
+    cat << 'EOF' > $REPO_DIR/.git/agent_commit_msg.txt
     type(scope): subject
     
     Body
     References
     EOF
-    git commit -F .git/agent_commit_msg.txt
-    rm .git/agent_commit_msg.txt
+    git -C "$REPO_DIR" commit -F $REPO_DIR/.git/agent_commit_msg.txt
+    rm $REPO_DIR/.git/agent_commit_msg.txt
     ```
 5. Verify the commit.
     ```bash
-    git --no-pager log -1 --format="%h %s"
-    git --no-pager show --stat HEAD
+    git -C "$REPO_DIR" --no-pager log -1 --format="%h %s"
+    git -C "$REPO_DIR" --no-pager show --stat HEAD
     ```
 
 ## Default Commit Format
