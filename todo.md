@@ -24,13 +24,4 @@ At the beginning of work on each step, prior to making any changes to any code, 
 
 ## Logging
 
-See [logging-plan.md](logging-plan.md) for the comprehensive refactoring plan.  This section tracks implementation progress from that plan.
-
-- [x] **Phase 1**: Add HTTP Request/Response Logging Middleware
-- [x] **Phase 2**: Standardize CLI Operation Logging
-- [x] **Phase 3**: Standardize API Operation Logging (Handlers)
-- [x] **Phase 4**: Standardize Startup/Shutdown Logging
-- [x] **Phase 5**: Standardize Service/Repository Layer Logging
-- [x] **Phase 6**: Storage Cap and Maintenance Logging
-- [x] **Phase 7**: Integration Testing and Documentation
-- [x] **Phase 8**: Final Verification
+- [x] **Standardize logging across KOPDS and KOSYNC**: Refactored the logging system in both projects to use the standard library `log/slog` with a maximum-uniformity goal. Implemented uniform `LoggingMiddleware` for HTTP request/response tracking with unique `request_id` correlation; standardized CLI user-management logging (success/failure); added structured logging to handlers, services, and repositories (INFO for business events, DEBUG for diagnostics); and unified storage cap/maintenance logging. Updated all READMEs and `AGENTS.md` files with the new logging strategy and verified comprehensive coverage through expanded unit and integration tests.
