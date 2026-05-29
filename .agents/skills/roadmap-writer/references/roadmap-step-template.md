@@ -4,15 +4,15 @@ Use this template when authoring implementation roadmaps consumed by **stepwise-
 
 ## Per-Step Fields
 
-| Field | Required | Purpose |
-|-------|----------|---------|
-| **ID** | Yes | Unique, grep-safe identifier (e.g., `UR2-3.2`) |
-| **Goal** | Yes | One sentence describing the outcome |
-| **Repos** | Yes | Which git roots change: `kopds`, `kosync`, `koserver`, or combinations |
-| **Read** | Recommended | Files to read for context (cap ~5) |
-| **Edit** | Recommended | Files allowed to change (cap ~5) |
-| **Verify** | Yes | Exact commands to run (copy-paste ready) |
-| **Done when** | Yes | Acceptance criteria |
+| Field         | Required    | Purpose                                        |
+| :-----------: | :---------: | :--------------------------------------------- |
+| **ID**        | Yes         | Unique, grep-safe identifier (e.g., `UR2-3.2`) |
+| **Goal**      | Yes         | One sentence describing the outcome            |
+| **Repos**     | Yes         | Which git roots change                         |
+| **Read**      | Recommended | Files to read for context (cap ~5)             |
+| **Edit**      | Recommended | Files allowed to change (cap ~5)               |
+| **Verify**    | Yes         | Exact commands to run (copy-paste ready)       |
+| **Done when** | Yes         | Acceptance criteria                            |
 
 ## File Budget
 

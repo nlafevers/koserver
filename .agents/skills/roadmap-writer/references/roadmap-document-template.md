@@ -14,7 +14,7 @@ One paragraph: what this roadmap achieves and why it exists.
 
 ### 2. Workspace and git rules
 
-Summarize multi-repo boundaries. Point to project `AGENTS.md` rather than duplicating full policy.
+Summarize multi-repo boundaries if present. Point to project `AGENTS.md` rather than duplicating full policy.
 
 ```markdown
 KOSERVER is documentation only. KOPDS and KOSYNC are separate Git repositories.
