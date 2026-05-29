@@ -1,11 +1,20 @@
 ---
 name: git-committer
-description: Creates git commits following Conventional Commits format with type/scope/subject. Use when user wants to commit changes, create commit, save work, or stage and commit. Handles regular branch commits (development) and merge commits (PR closure). Enforces project-specific conventions from CLAUDE.md.
+description: Creates git commits following Conventional Commits format with type/scope/subject. Use when asked to commit changes, create commit, save work, or stage and commit.
 ---
 
 # Git Committer
 
-Creates git commits following Conventional Commits format with proper type, scope, and subject.
+Creates git commits following Conventional Commits format with type, scope, subject, and (optional) body.
+
+## When to Use This Skill
+
+- When asked to commit changes, create a commit, save work, or stage and commit.
+- When asked to create a commit message following Conventional Commits format.
+
+## When Not to Use This Skill
+
+- When the user has already provided a commit message or instructions for creating a commit.
 
 ## Project-Specific Conventions
 
