@@ -1,6 +1,6 @@
 # Roadmap Step Template
 
-Use this template when authoring implementation roadmaps for the **stepwise-implementor** skill. Each step must stand alone: an agent bootstrapping from the roadmap and listed files should not need prior conversation or earlier steps.
+Use this template when authoring implementation roadmaps consumed by **stepwise-implementor**. Each step must stand alone: an agent bootstrapping from the roadmap and listed files should not need prior conversation or earlier steps.
 
 ## Per-Step Fields
 

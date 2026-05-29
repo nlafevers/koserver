@@ -32,7 +32,7 @@ Core rules:
 - **No speculative exploration** — no repo-wide search or broad reads beyond the step's file list and required project docs (`AGENTS.md`, repo-root rules).
 - **Durable > conversational** — if a fact must survive to the next step, it belongs in the roadmap (checkbox, commit hash) or the codebase, not in chat.
 
-Roadmap steps must be self-contained. See `references/roadmap-step-template.md` for authoring conventions.
+Roadmap steps must be self-contained. See `../roadmap-writer/references/roadmap-step-template.md` (authored by **roadmap-writer**).
 
 ## Workflow
 
@@ -44,6 +44,7 @@ Roadmap steps must be self-contained. See `references/roadmap-step-template.md` 
    - `references/annotation-format.md` if checkbox format is unclear
    - Project `AGENTS.md` / git-repo rules (paths, multi-repo commit rules)
    - Files listed under the current step's **Read** / **Edit** lists (if present)
+   - If the current step lacks **Read** / **Edit** lists, ask the user to rewrite it with **roadmap-writer** before implementing
 3. **Do not** consult prior assistant messages, prior step plans, or earlier tool results — except the **Step Handoff** block in the *immediately previous* assistant turn (if continuing in the same thread).
 4. If resuming `[-]`: run the step's verification commands, inspect `git status` and `git diff`, then continue implementation without re-deriving context from old chat.
 
@@ -159,6 +160,6 @@ If blocked or awaiting clarification:
 ## References
 
 - `references/annotation-format.md` — checkbox states and commit-hash audit trails
-- `references/roadmap-step-template.md` — self-contained step authoring (Read/Edit/Verify file caps)
+- `../roadmap-writer/references/roadmap-step-template.md` — step shape (Repos, Read, Edit, Verify; authored by roadmap-writer)
 
 If the planning document does not use an established annotation convention, adopt `references/annotation-format.md`.
