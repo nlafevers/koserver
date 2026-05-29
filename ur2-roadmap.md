@@ -162,20 +162,8 @@ Acceptance criteria for Phase 2:
 
 Goal: make the command-line user management code as identical as practical.
 
-- [ ] **UR2-3.1 Add KOPDS storage lifecycle wrappers**
-  1. Open `/home/nathan/koserver/kopds/internal/database/sqlite.go`.
-  2. Add a function named `InitDB(path string, allowCreate bool) (*Storage, error)` that mirrors KOSYNC:
-     - Call `OpenSQLite(path, allowCreate)`.
-     - If opening fails, return the error.
-     - Run `Migrate(db)`.
-     - If migration fails, close the database and return the error.
-     - Return `&Storage{db: db, log: slog.Default()}`.
-  3. Add `func (s *Storage) Close() error { return s.db.Close() }`.
-  4. Keep existing `NewSQLite(path)` for compatibility.
-  5. Run KOPDS tests:
-     ```bash
-     GOCACHE=/tmp/kopds-gocache go test ./internal/database ./cmd/kopds
-     ```
+- [x] **UR2-3.1 Storage lifecycle wrappers** (superseded by TDL-001 — do not add `InitDB` to KOPDS)
+  Implemented via TDL-001: both apps use `OpenSQLite(path, allowCreate)`, `Migrate(db)`, and `NewSQLite(path, allowCreate)`. KOSYNC removed `InitDB` and `Storage.Close()`; callers close `*sql.DB` and inject `NewStorage(db, log)` or repositories. See completed TDL-001 in `todo.md`.
 
 - [ ] **UR2-3.2 Add KOPDS storage user methods**
   1. Open `/home/nathan/koserver/kopds/internal/database/sqlite.go` and `/home/nathan/koserver/kopds/internal/database/user_repository.go`.
@@ -587,7 +575,7 @@ Goal: make the public project shape and documentation match the final behavior.
      - `/home/nathan/koserver/kosync/UNIFORMITY.md`
   2. Add newly identical or intentionally aligned items:
      - CLI storage helpers.
-     - `InitDB`.
+     - `OpenSQLite`, `Migrate`, `NewSQLite`, `NewStorage` (not `InitDB`).
      - `UpdatePassword`.
      - request ID generation.
      - rate-limit helpers.
