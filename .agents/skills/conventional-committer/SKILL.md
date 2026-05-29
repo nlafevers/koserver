@@ -16,9 +16,24 @@ Creates git commits following *Conventional Commits* format with type, scope, su
 
 - When the user has already provided a commit message or instructions for creating a commit.
 
-## Project-Specific Conventions
+## Relationship to Other Skills
 
-First, always check for project-specific commit conventions by searching for "commit" in `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, or similar files.  If the project specifies a commit format, then that format takes precedence over the default format described below.
+| Skill                  | Role        | When to Use                                                                    |
+| :--------------------: | :---------: | :----------------------------------------------------------------------------- |
+| roadmap-writer         | Planner     | Writing or rewriting implementation roadmaps, but **not** implementing them    |
+| roadmap-implementer    | Implementer | Implementing changes specified in roadmaps, but **not** troubleshooting issues |
+| conventional-committer | Committer   | Committing changes to the repository                                           |
+
+## Philosophy
+
+Heavyweight models are used to perform large context audits or planning passes and output a detailed implementation roadmap as a durable artifact of the plan.  Lightweight models are then used to implement the plan in a stepwise manner requiring only minimal context.  The planning phase agents serve as senior advisors and architects, with a relatively wide latitude for exercising independent judgment, and the freedom to explore the workspace as needed.  The implementation phase agents serve as junior engineers, are expected to stop and ask for guidance if they cannot adhere strictly to the plan, and are expected to avoid broad reads or attempts to troubleshoot issues independently.  Implementation phase agents also commit changes, using committer skills if available.
+
+## Principles
+
+- **Project Convention Primacy** — always check for project-specific commit conventions in `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, or similar files.  If the project specifies a commit format, then that format takes precedence over the default format described below.
+- **Repository Structure Awareness** — learn how files are tracked in the workspace; don't assume a simple structure.
+- **Atomic Commits** — group related changes into a single focused commit; avoid mixing unrelated changes in one commit or broadly staging all changed files.
+- **Verify Before, Verify After** — run verification commands before committing, and verify the commit afterward to ensure correctness.
 
 ## Workflow
 
