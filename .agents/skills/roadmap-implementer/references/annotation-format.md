@@ -5,7 +5,7 @@ This project uses a strict annotation format to track the state of implementatio
 ## State Annotations
 
 - `[ ]` **Uncompleted**: Work has not yet started.
-- `[-]` **Work in Progress (WIP)**: Implementation is currently underway. If an agent encounters this state upon startup, it indicates a previously interrupted session. Resume by inspecting `git status`, `git diff`, and the step's **Verify** commands — not by relying on prior chat history. See `../roadmap-writer/references/roadmap-step-template.md` for per-step file lists.
+- `[-]` **Work in Progress (WIP)**: Implementation is currently underway. If an agent encounters this state upon startup, it indicates a previously interrupted session. Resume by inspecting `git status`, `git diff`, and the step's **Verify** commands — not by relying on prior chat history. See Part 2 of `../roadmap-writer/references/roadmap-template.md` for per-step file lists.
 - `[x]` **Completed**: Work is finished, verified, and committed.
 
 ## Formatting Rules
