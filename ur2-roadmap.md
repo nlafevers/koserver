@@ -2,8 +2,6 @@
 
 This roadmap records the next round of work for bringing KOPDS and KOSYNC closer together while also fixing security, edge-case, test, bloat, and performance issues found during the fresh audit.
 
-KOSERVER is documentation only. KOPDS and KOSYNC are separate Git repositories inside this workspace. Code changes inside `kopds/` must be committed in the KOPDS repository. Code changes inside `kosync/` must be committed in the KOSYNC repository. Changes to this roadmap or other root documentation must be committed in the KOSERVER repository.
-
 ## How To Use This Roadmap
 
 When running Go commands in this workspace, prefer a writable cache under `/tmp`:
@@ -13,7 +11,9 @@ GOCACHE=/tmp/kopds-gocache go test ./...
 GOCACHE=/tmp/kosync-gocache go test ./...
 ```
 
-Do not copy commits across repositories. If you edit a KOPDS file, commit from `/home/nathan/koserver/kopds`. If you edit a KOSYNC file, commit from `/home/nathan/koserver/kosync`. If you edit this roadmap, commit from `/home/nathan/koserver`.
+## Git Repository Structure
+
+KOSERVER is documentation only. KOPDS and KOSYNC are separate Git repositories inside this workspace. Code changes inside `kopds/` must be committed in the KOPDS repository. Code changes inside `kosync/` must be committed in the KOSYNC repository. Changes to this roadmap or other root documentation must be committed in the KOSERVER repository.  Do not copy commits across repositories.
 
 ## Audit Findings To Address
 
@@ -36,67 +36,38 @@ Do not copy commits across repositories. If you edit a KOPDS file, commit from `
 Goal: make both repositories mechanically clean before behavioral changes.
 
 - [x] **UR2-1.1 Format KOPDS** (Commit: 235c79a)
-  1. Open a terminal in `/home/nathan/koserver/kopds`.
-  2. Run:
-     ```bash
-     gofmt -w .
-     ```
-  3. Run:
-     ```bash
-     gofmt -l .
-     ```
-  4. Confirm the second command prints nothing.
-  5. Run:
-     ```bash
-     GOCACHE=/tmp/kopds-gocache go test ./...
-     ```
+  - **Repos:** kopds
+  - **Read:** none
+  - **Edit:** kopds
+  - **Instructions:** Run gofmt on the repository.
+  - **Verify:** `cd kopds && gofmt -l . && GOCACHE=/tmp/kopds-gocache go test ./...`
+  - **Done when:** gofmt prints nothing and tests pass
 
 - [x] **UR2-1.2 Format KOSYNC** (Commit: e837d82)
-  1. Open a terminal in `/home/nathan/koserver/kosync`.
-  2. Run:
-     ```bash
-     gofmt -w .
-     ```
-  3. Run:
-     ```bash
-     gofmt -l .
-     ```
-  4. Confirm the second command prints nothing.
-  5. Run:
-     ```bash
-     GOCACHE=/tmp/kosync-gocache go test ./...
-     ```
+  - **Repos:** kosync
+  - **Read:** none
+  - **Edit:** kosync
+  - **Instructions:** Run gofmt on the repository.
+  - **Verify:** `cd kosync && gofmt -l . && GOCACHE=/tmp/kosync-gocache go test ./...`
+  - **Done when:** gofmt prints nothing and tests pass
 
 - [x] **UR2-1.3 Tidy KOPDS dependencies** (Commit: 28c5561)
-  1. Open `/home/nathan/koserver/kopds/go.mod`.
-  2. Confirm `github.com/go-chi/chi/v5` is still listed.
-  3. Run:
-     ```bash
-     GOCACHE=/tmp/kopds-gocache go mod tidy
-     ```
-  4. Confirm `github.com/go-chi/chi/v5` is removed from `go.mod` and `go.sum`.
-  5. Run:
-     ```bash
-     GOCACHE=/tmp/kopds-gocache go test ./...
-     ```
+  - **Repos:** kopds
+  - **Read:** kopds/go.mod
+  - **Edit:** kopds/go.mod, kopds/go.sum
+  - **Instructions:** Run go mod tidy to remove unused `github.com/go-chi/chi/v5`.
+  - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./...`
+  - **Done when:** dependency removed and tests pass
 
 - [x] **UR2-1.4 Confirm KOSYNC dependencies are tidy** (Commit: none)
-  1. Open a terminal in `/home/nathan/koserver/kosync`.
-  2. Run:
-     ```bash
-     GOCACHE=/tmp/kosync-gocache go mod tidy
-     ```
-  3. Run:
-     ```bash
-     git diff -- go.mod go.sum
-     ```
-  4. If there are changes, run tests:
-     ```bash
-     GOCACHE=/tmp/kosync-gocache go test ./...
-     ```
+  - **Repos:** kosync
+  - **Read:** kosync/go.mod
+  - **Edit:** kosync/go.mod, kosync/go.sum
+  - **Instructions:** Run go mod tidy.
+  - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./...`
+  - **Done when:** tests pass
 
 Acceptance criteria for Phase 1:
-
 - `gofmt -l .` prints nothing in both app repos.
 - `go test ./...` passes in both app repos.
 - KOPDS no longer depends on `github.com/go-chi/chi/v5`.
@@ -106,120 +77,77 @@ Acceptance criteria for Phase 1:
 Goal: fix the Go standard library vulnerability and make release automation match both projects.
 
 - [x] **UR2-2.1 Update Go versions in KOPDS** (Commit: 3a2d10f)
-  1. Open `/home/nathan/koserver/kopds/go.mod`.
-  2. Keep the `go` directive at the project-required version unless the project owner decides to raise it. The immediate vulnerability fix is in the build toolchain, not necessarily the module directive.
-  3. Open `/home/nathan/koserver/kopds/.github/workflows/publish-binaries.yml`.
-  4. Change `go-version: '1.25.0'` to `go-version: '1.26.x'`.
-  5. ~~Open `/home/nathan/koserver/kopds/build/Dockerfile`.~~
-  6. ~~Change the builder image from `golang:1.26-alpine` to a fixed patch tag such as `golang:1.26.3-alpine`.~~
-  7. Run:
-     ```bash
-     GOCACHE=/tmp/kopds-gocache go test ./...
-     ```
-  8. ~~Run:~~
-     ```bash
-     GOCACHE=/tmp/kopds-gocache go run golang.org/x/vuln/cmd/govulncheck@latest ./...
-     ```
-  9. ~~If `govulncheck` still reports `GO-2026-4971`, confirm the command is using Go `1.26.3` or newer by running `go version`.~~
+  - **Repos:** kopds
+  - **Read:** kopds/go.mod
+  - **Edit:** kopds/.github/workflows/publish-binaries.yml
+  - **Instructions:** Change `go-version` from `'1.25.0'` to `'1.26.x'` in the workflow.
+  - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./...`
+  - **Done when:** workflows use the correct version and tests pass
 
 - [x] **UR2-2.2 Update Go versions in KOSYNC** (Commit: 9b1b210)
-  1. Repeat the same toolchain update in `/home/nathan/koserver/kosync`.
-  2. Update `.github/workflows/publish-binaries.yml`.
-  3. ~~Update `build/Dockerfile`.~~
-  4. Run:
-     ```bash
-     GOCACHE=/tmp/kosync-gocache go test ./...
-     GOCACHE=/tmp/kosync-gocache go run golang.org/x/vuln/cmd/govulncheck@latest ./...
-     ```
+  - **Repos:** kosync
+  - **Read:** kosync/go.mod
+  - **Edit:** kosync/.github/workflows/publish-binaries.yml
+  - **Instructions:** Change `go-version` to `'1.26.x'` in the workflow.
+  - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./...`
+  - **Done when:** workflows use the correct version and tests pass
 
-- [x] **UR2-2.3 Fix Docker publish workflows** (Commit kopds: eaa84e4, commit kosync: c5e7764)
-  1. Open `/home/nathan/koserver/kopds/.github/workflows/docker-publish.yml`.
-  2. Under the `docker/build-push-action` `with:` block, add:
-     ```yaml
-     file: build/Dockerfile
-     ```
-  3. Repeat the same change in `/home/nathan/koserver/kosync/.github/workflows/docker-publish.yml`.
-  4. Commit each repository separately.
+- [x] **UR2-2.3 Fix Docker publish workflows** (Commits: kopds:eaa84e4, kosync:c5e7764)
+  - **Repos:** kopds, kosync
+  - **Read:** none
+  - **Edit:** kopds/.github/workflows/docker-publish.yml, kosync/.github/workflows/docker-publish.yml
+  - **Instructions:** Add `file: build/Dockerfile` under the `docker/build-push-action` block in both workflows.
+  - **Verify:** visual inspection of yaml
+  - **Done when:** file is specified explicitly
 
 - [x] **UR2-2.4 Fix KOSYNC binary release workflow** (Commit: 9a6a7ad)
-  1. Open `/home/nathan/koserver/kosync/.github/workflows/publish-binaries.yml`.
-  2. Find the line that sets `BINARY_NAME="kopds-${{ matrix.goos }}-${{ matrix.goarch }}"`.
-  3. Change `kopds` to `kosync`.
-  4. Find the `go build` line.
-  5. Change `./cmd/kopds` to `./cmd/kosync`.
-  6. Run KOSYNC tests:
-     ```bash
-     GOCACHE=/tmp/kosync-gocache go test ./...
-     ```
+  - **Repos:** kosync
+  - **Read:** none
+  - **Edit:** kosync/.github/workflows/publish-binaries.yml
+  - **Instructions:** Change binary name from `kopds` to `kosync` and build path from `./cmd/kopds` to `./cmd/kosync`.
+  - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./...`
+  - **Done when:** binary builds with correct name
 
 Acceptance criteria for Phase 2:
-
-- ~~Both Dockerfiles use a fixed, non-vulnerable Go patch version.~~
 - Both binary release workflows use the correct app name and package path.
-- ~~`govulncheck` no longer reports called vulnerabilities.~~
 
 ## Phase 3: Uniform CLI And Database Lifecycle
 
 Goal: make the command-line user management code as identical as practical.
 
-- [x] **UR2-3.1 Storage lifecycle wrappers** (superseded by TDL-001 — do not add `InitDB` to KOPDS)
-  Implemented via TDL-001: both apps use `OpenSQLite(path, allowCreate)`, `Migrate(db)`, and `NewSQLite(path, allowCreate)`. KOSYNC removed `InitDB` and `Storage.Close()`; callers close `*sql.DB` and inject `NewStorage(db, log)` or repositories. See completed TDL-001 in `todo.md`.
+- [x] **UR2-3.1 Storage lifecycle wrappers** (Commit: superseded by TDL-001)
+  - **Repos:** kopds, kosync
+  - **Read:** none
+  - **Edit:** none
+  - **Instructions:** Implemented via TDL-001: both apps use OpenSQLite, Migrate, NewSQLite.
+  - **Verify:** N/A
+  - **Done when:** Completed in TDL-001
 
 - [ ] **UR2-3.2 Add KOPDS storage user methods**
-  1. Open `/home/nathan/koserver/kopds/internal/database/sqlite.go` and `/home/nathan/koserver/kopds/internal/database/user_repository.go`.
-  2. Add storage methods with these exact names where possible:
-     - `CreateUserIfNotExists(username, password string) error`
-     - `SaveUser(username, password string) error`
-     - `GetUserHash(username string) (string, error)`
-     - `UpdatePassword(username, passwordHash string) error`
-     - `DeleteUser(username string) error`
-  3. Implement each method by using the same SQL behavior currently used by `sqliteUserRepository`.
-  4. Keep the existing repository interface intact so current KOPDS callers continue to work.
-  5. Add focused tests in `internal/database/user_repository_test.go` or a new storage test.
-  6. Run:
-     ```bash
-     GOCACHE=/tmp/kopds-gocache go test ./internal/database ./cmd/kopds
-     ```
+  - **Repos:** kopds
+  - **Read:** kopds/internal/database/user_repository.go
+  - **Edit:** kopds/internal/database/sqlite.go, kopds/internal/database/user_repository_test.go
+  - **Instructions:** Add storage methods `CreateUserIfNotExists`, `SaveUser`, `GetUserHash`, `UpdatePassword`, `DeleteUser` using the same SQL behavior currently in `sqliteUserRepository`. Keep the repository interface intact so callers continue to work. Add focused tests in `user_repository_test.go` or a new storage test.
+  - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/database ./cmd/kopds`
+  - **Done when:** tests pass; storage methods implemented
 
 - [ ] **UR2-3.3 Rename or wrap KOSYNC password update**
-  1. Open `/home/nathan/koserver/kosync/internal/database/sqlite.go`.
-  2. Add a method named `UpdatePassword(username, passwordHash string) error`.
-  3. Move the body of `UpdateUserPassword` into `UpdatePassword`, or have `UpdateUserPassword` call `UpdatePassword`.
-  4. Update KOSYNC CLI code to call `UpdatePassword`.
-  5. Keep `UpdateUserPassword` temporarily if tests or callers still use it.
-  6. Run:
-     ```bash
-     GOCACHE=/tmp/kosync-gocache go test ./internal/database ./cmd/kosync
-     ```
+  - **Repos:** kosync
+  - **Read:** none
+  - **Edit:** kosync/internal/database/sqlite.go, kosync/cmd/kosync/main.go
+  - **Instructions:** Add a method `UpdatePassword(username, passwordHash string) error` that wraps or replaces `UpdateUserPassword`. Update CLI code to call `UpdatePassword`.
+  - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/database ./cmd/kosync`
+  - **Done when:** tests pass; new method name in use by CLI
 
 - [ ] **UR2-3.4 Make CLI functions copy-paste similar**
-  1. Open both entrypoints side by side:
-     - `/home/nathan/koserver/kopds/cmd/kopds/main.go`
-     - `/home/nathan/koserver/kosync/cmd/kosync/main.go`
-  2. Compare these functions:
-     - `runCLI`
-     - `printUsage`
-     - `createUser`
-     - `deleteUser`
-     - `changePassword`
-     - `openCLIStorage`
-     - `passwordFromArgs`
-     - `readPasswordInteractively`
-  3. Make the functions identical except for import paths, app-specific types, and `appName`.
-  4. Prefer the cleaner KOPDS CLI dispatch style after KOSYNC has been formatted.
-  5. Use the same stdout and error wording in both apps.
-  6. Run:
-     ```bash
-     cd /home/nathan/koserver/kopds
-     GOCACHE=/tmp/kopds-gocache go test ./cmd/kopds ./internal/database
-
-     cd /home/nathan/koserver/kosync
-     GOCACHE=/tmp/kosync-gocache go test ./cmd/kosync ./internal/database
-     ```
-  7. Commit in each app repo separately.
+  - **Repos:** kopds, kosync
+  - **Read:** none
+  - **Edit:** kopds/cmd/kopds/main.go, kosync/cmd/kosync/main.go
+  - **Instructions:** Compare and align `runCLI`, `printUsage`, `createUser`, `deleteUser`, `changePassword`, `openCLIStorage`, `passwordFromArgs`, `readPasswordInteractively`. Make them identical except for app names and imports. Prefer the KOPDS dispatch style. Use same stdout/error wording.
+  - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./cmd/kopds ./internal/database && cd ../kosync && GOCACHE=/tmp/kosync-gocache go test ./cmd/kosync ./internal/database`
+  - **Done when:** functions are virtually identical and tests pass
 
 Acceptance criteria for Phase 3:
-
 - CLI user-management functions are copy-paste similar across KOPDS and KOSYNC.
 - Both apps still create missing databases from CLI commands.
 - Duplicate `create-user` still fails from the CLI in both apps.
@@ -229,73 +157,46 @@ Acceptance criteria for Phase 3:
 Goal: make server startup, shutdown, logging, and shared middleware behavior easier to compare.
 
 - [ ] **UR2-4.1 Extract KOSYNC `runServer`**
-  1. Open `/home/nathan/koserver/kosync/cmd/kosync/main.go`.
-  2. Change `main()` so it matches KOPDS:
-     - Load config.
-     - Create logger with `logger.New`.
-     - If there are CLI args, call `runCLI(cfg)` and return.
-     - Otherwise call `runServer(cfg, log)`.
-  3. Move all server setup currently inside `main()` into `runServer(cfg *config.Config, log *slog.Logger)`.
-  4. Make shutdown use a timeout context like KOPDS does.
-  5. Keep KOSYNC-specific routes unchanged.
-  6. Run:
-     ```bash
-     GOCACHE=/tmp/kosync-gocache go test ./cmd/kosync ./internal/api
-     ```
+  - **Repos:** kosync
+  - **Read:** none
+  - **Edit:** kosync/cmd/kosync/main.go
+  - **Instructions:** Change `main()` to match KOPDS: load config, create logger, if CLI args exist call `runCLI`, else call `runServer`. Move server setup into `runServer(cfg *config.Config, log *slog.Logger)`. Use a timeout context for shutdown.
+  - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./cmd/kosync ./internal/api`
+  - **Done when:** tests pass; main matches KOPDS structure
 
 - [ ] **UR2-4.2 Add KOSYNC config validation**
-  1. Open `/home/nathan/koserver/kosync/internal/config/config.go`.
-  2. Add `func (c *Config) Validate() error`.
-  3. Validate:
-     - `Port` is between `1` and `65535`, unless tests intentionally allow `0`.
-     - `DatabasePath` is not empty.
-     - `LogLevel` is one of `debug`, `info`, `warn`, or `error`.
-     - `StorageCapMB` is not negative.
-  4. Call `cfg.Validate()` in KOSYNC `runServer` before opening the database.
-  5. Add config tests for valid defaults and invalid values.
-  6. Run:
-     ```bash
-     GOCACHE=/tmp/kosync-gocache go test ./internal/config ./cmd/kosync
-     ```
+  - **Repos:** kosync
+  - **Read:** none
+  - **Edit:** kosync/internal/config/config.go, kosync/cmd/kosync/main.go, kosync/internal/config/config_test.go
+  - **Instructions:** Add `func (c *Config) Validate() error` validating: `Port` (1-65535 or 0 for tests), `DatabasePath` (not empty), `LogLevel` (debug/info/warn/error), `StorageCapMB` (non-negative). Call this in `runServer`. Add config tests.
+  - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/config ./cmd/kosync`
+  - **Done when:** tests pass; validation runs on startup
 
 - [ ] **UR2-4.3 Standardize request ID generation**
-  1. Open both middleware files:
-     - `kopds/internal/api/middleware.go`
-     - `kosync/internal/api/middleware.go`
-  2. Find `generateRequestID`.
-  3. Change both functions to:
-     - Allocate 16 bytes.
-     - Call `rand.Read`.
-     - If `rand.Read` fails, fall back to a timestamp-based value.
-     - Return the hex string.
-  4. Keep the function name identical.
-  5. Add or update middleware tests to confirm `request_id` exists and is non-empty.
-  6. Run API tests in both repos.
-  7. Commit separately in each repo.
+  - **Repos:** kopds, kosync
+  - **Read:** none
+  - **Edit:** kopds/internal/api/middleware.go, kosync/internal/api/middleware.go, kopds/internal/api/middleware_test.go, kosync/internal/api/middleware_test.go
+  - **Instructions:** In both apps, update `generateRequestID` to allocate 16 bytes and call `rand.Read`, falling back to timestamp-based on failure, returning hex string. Add/update tests confirming `request_id` exists.
+  - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/api && cd ../kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/api`
+  - **Done when:** identically implemented in both and tests pass
 
 - [ ] **UR2-4.4 Enable SQLite foreign keys uniformly**
-  1. Open both `internal/database/sqlite.go` files.
-  2. Find the `PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;` statement.
-  3. Add `PRAGMA foreign_keys=ON;` to the same initialization flow.
-  4. Add a test in each app that proves a foreign-key violation fails.
-  5. Run database tests in both repos.
-  6. Commit separately in each repo.
+  - **Repos:** kopds, kosync
+  - **Read:** none
+  - **Edit:** kopds/internal/database/sqlite.go, kosync/internal/database/sqlite.go, kopds/internal/database/sqlite_test.go, kosync/internal/database/sqlite_test.go
+  - **Instructions:** Add `PRAGMA foreign_keys=ON;` during SQLite connection init (alongside WAL). Add tests proving FK violations fail.
+  - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/database && cd ../kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/database`
+  - **Done when:** PRAGMA is active and tests pass
 
 - [ ] **UR2-4.5 Move disabled storage-cap check to the top**
-  1. Open both `internal/database/sqlite.go` files.
-  2. In `Storage.EnforceStorageCap`, add this as the first logic after getting the logger:
-     ```go
-     if capMB <= 0 {
-         return false, nil
-     }
-     ```
-  3. Keep `enforceStorageCap` helper behavior identical.
-  4. Add or update tests proving disabled caps do not inspect a missing file.
-  5. Run database tests in both repos.
-  6. Commit separately in each repo.
+  - **Repos:** kopds, kosync
+  - **Read:** none
+  - **Edit:** kopds/internal/database/sqlite.go, kosync/internal/database/sqlite.go, kopds/internal/database/sqlite_test.go, kosync/internal/database/sqlite_test.go
+  - **Instructions:** In `Storage.EnforceStorageCap`, return early if `capMB <= 0` right after getting the logger. Add/update tests proving disabled caps skip file stat.
+  - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/database && cd ../kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/database`
+  - **Done when:** early return implemented and tests pass
 
 Acceptance criteria for Phase 4:
-
 - KOSYNC has the same `main` to `runServer` shape as KOPDS.
 - Middleware helper names remain aligned.
 - Storage-cap disabled behavior is identical and cheap.
@@ -306,86 +207,46 @@ Acceptance criteria for Phase 4:
 Goal: reduce public attack surface and make KOSYNC protocol responses consistent.
 
 - [ ] **UR2-5.1 Disable KOSYNC public registration by default**
-  1. Open `/home/nathan/koserver/kosync/internal/config/config.go`.
-  2. Change the default for `disable_registration` from `false` to `true`.
-  3. Open `/home/nathan/koserver/kosync/config/config.yaml`.
-  4. Change `disable_registration: false` to `disable_registration: true`.
-  5. Open `/home/nathan/koserver/kosync/deploy/docker-compose.yml`.
-  6. Change `KOSYNC_DISABLE_REGISTRATION=false` to `KOSYNC_DISABLE_REGISTRATION=true`.
-  7. Update README text so users know CLI user creation is the default and public registration is opt-in.
-  8. Add tests proving the default config disables registration.
-  9. Run:
-     ```bash
-     GOCACHE=/tmp/kosync-gocache go test ./internal/config ./internal/api
-     ```
+  - **Repos:** kosync
+  - **Read:** none
+  - **Edit:** kosync/internal/config/config.go, kosync/config/config.yaml, kosync/deploy/docker-compose.yml, kosync/README.md, kosync/internal/config/config_test.go
+  - **Instructions:** Change `disable_registration` default from `false` to `true`. Update sample configs and compose file. Update README text. Add config test.
+  - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/config ./internal/api`
+  - **Done when:** default is true and tests pass
 
 - [ ] **UR2-5.2 Wire KOSYNC rate limiting**
-  1. Open `/home/nathan/koserver/kosync/internal/config/config.go`.
-  2. Add config fields:
-     - `RateLimitEnabled bool`
-     - `RateLimitPerMinute int`
-     - `RateLimitBurst int`
-     - `TrustProxyHeaders bool`
-  3. Add defaults:
-     - `rate_limit_enabled: true`
-     - `rate_limit_per_minute: 30`
-     - `rate_limit_burst: 10`
-     - `trust_proxy_headers: false`
-  4. Open `/home/nathan/koserver/kosync/internal/api/middleware.go`.
-  5. Update rate limiting so the key is a clean client IP, not the full `host:port` value.
-  6. If `trust_proxy_headers` is false, use `net.SplitHostPort(r.RemoteAddr)`.
-  7. If `trust_proxy_headers` is true, prefer the first IP in `X-Forwarded-For`, then fall back to `RemoteAddr`.
-  8. Open `/home/nathan/koserver/kosync/cmd/kosync/main.go`.
-  9. Wrap `/users/create` and protected auth routes with rate limiting when enabled.
-  10. Add tests for:
-      - Requests over the limit return `429`.
-      - Different IPs get different limiters.
-      - `X-Forwarded-For` is ignored unless `trust_proxy_headers` is true.
-  11. Run:
-      ```bash
-      GOCACHE=/tmp/kosync-gocache go test ./internal/api ./cmd/kosync
-      ```
+  - **Repos:** kosync
+  - **Read:** none
+  - **Edit:** kosync/internal/config/config.go, kosync/internal/api/middleware.go, kosync/cmd/kosync/main.go, kosync/internal/api/handlers_test.go
+  - **Instructions:** Add config for `RateLimitEnabled`, `RateLimitPerMinute`, `RateLimitBurst`, `TrustProxyHeaders` with defaults (true, 30, 10, false). Update rate limiting middleware to use clean client IP (checking `X-Forwarded-For` only if trusted). Wrap `/users/create` and protected routes. Add rate limiting tests.
+  - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/api ./cmd/kosync`
+  - **Done when:** rate limits are active and tests pass
 
 - [ ] **UR2-5.3 Add equivalent KOPDS failed-auth rate limiting**
-  1. Open `/home/nathan/koserver/kopds/internal/config/config.go`.
-  2. Add the same rate-limit config fields and defaults as KOSYNC.
-  3. Open `/home/nathan/koserver/kopds/internal/api/middleware.go`.
-  4. Add the same client IP helper and limiter types if they now exist in KOSYNC.
-  5. Apply rate limiting only around Basic Auth failures or auth attempts, not around every successful catalog request.
-  6. Add tests for too many failed Basic Auth attempts.
-  7. Run:
-     ```bash
-     GOCACHE=/tmp/kopds-gocache go test ./internal/api ./internal/config ./cmd/kopds
-     ```
+  - **Repos:** kopds
+  - **Read:** none
+  - **Edit:** kopds/internal/config/config.go, kopds/internal/api/middleware.go, kopds/internal/api/middleware_test.go
+  - **Instructions:** Add same config fields. Copy rate limit logic from KOSYNC. Apply limiting only to failed Basic Auth attempts. Add tests.
+  - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/api ./internal/config ./cmd/kopds`
+  - **Done when:** rate limits are active on failed auth and tests pass
 
 - [ ] **UR2-5.4 Fix KOSYNC response content type**
-  1. Open `/home/nathan/koserver/kosync/internal/api/handlers.go`.
-  2. In `HandleAuth`, remove `w.Header().Set("Content-Type", "application/json")`.
-  3. Open `/home/nathan/koserver/kosync/cmd/kosync/main.go`.
-  4. Make sure `ContentTypeMiddleware` wraps both protected routes and `/users/create`.
-  5. Add tests for:
-     - `/users/auth` returns `application/vnd.koreader.v1+json`.
-     - `/users/create` returns `application/vnd.koreader.v1+json`.
-     - Error responses from KOSYNC also use the KOReader MIME type where practical.
-  6. Run:
-     ```bash
-     GOCACHE=/tmp/kosync-gocache go test ./internal/api ./cmd/kosync
-     ```
+  - **Repos:** kosync
+  - **Read:** none
+  - **Edit:** kosync/internal/api/handlers.go, kosync/cmd/kosync/main.go, kosync/internal/api/handlers_test.go
+  - **Instructions:** Remove manual Content-Type setting in `HandleAuth`. Ensure `ContentTypeMiddleware` wraps protected routes and `/users/create`. Verify `application/vnd.koreader.v1+json` is used.
+  - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/api ./cmd/kosync`
+  - **Done when:** routes use correct content type and tests pass
 
 - [ ] **UR2-5.5 Make KOSYNC registration timing less distinguishable**
-  1. Open `/home/nathan/koserver/kosync/internal/api/handlers.go`.
-  2. Find `randomDelay`.
-  3. Use the same delay path for new registrations and duplicate registrations.
-  4. Keep duplicate registration fake success behavior so attackers cannot easily enumerate users.
-  5. Add a test that duplicate registration still returns `201`.
-  6. Add a test that duplicate registration does not change the stored password hash.
-  7. Run:
-     ```bash
-     GOCACHE=/tmp/kosync-gocache go test ./internal/api ./internal/database
-     ```
+  - **Repos:** kosync
+  - **Read:** none
+  - **Edit:** kosync/internal/api/handlers.go, kosync/internal/api/handlers_test.go
+  - **Instructions:** Use `randomDelay` equally for new and duplicate registrations. Keep fake success for duplicates. Add test verifying `201` for duplicates and no password change.
+  - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/api ./internal/database`
+  - **Done when:** timing mitigated and tests pass
 
 Acceptance criteria for Phase 5:
-
 - KOSYNC public registration is disabled unless explicitly enabled.
 - KOSYNC rate limiting is wired into real routes.
 - KOPDS has comparable failed-auth protection.
@@ -396,97 +257,54 @@ Acceptance criteria for Phase 5:
 Goal: fix confirmed KOPDS bugs and reduce unnecessary query work.
 
 - [ ] **UR2-6.1 Fix KOPDS author listing query**
-  1. Open `/home/nathan/koserver/kopds/internal/database/book_repository.go`.
-  2. Find `ListByAuthor`.
-  3. In the SQL query, change the join from:
-     ```sql
-     JOIN books_authors_link bal ON b.id = bal.author_id
-     ```
-     to:
-     ```sql
-     JOIN books_authors_link bal ON b.id = bal.book_id
-     ```
-  4. Add a regression test with two books and two authors where author IDs do not equal book IDs.
-  5. Confirm the selected author only returns their books.
-  6. Run:
-     ```bash
-     GOCACHE=/tmp/kopds-gocache go test ./internal/database ./internal/api
-     ```
+  - **Repos:** kopds
+  - **Read:** none
+  - **Edit:** kopds/internal/database/book_repository.go, kopds/internal/database/book_repository_test.go
+  - **Instructions:** In `ListByAuthor`, change the join ON clause from `b.id = bal.author_id` to `b.id = bal.book_id`. Add a regression test with two books and two authors showing correctness.
+  - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/database ./internal/api`
+  - **Done when:** join is fixed and test passes
 
 - [ ] **UR2-6.2 Validate KOPDS path IDs**
-  1. Open `/home/nathan/koserver/kopds/internal/api/handlers.go`.
-  2. Add a helper named `parsePositiveID(value string) (int64, error)`.
-  3. The helper should:
-     - Call `strconv.ParseInt(value, 10, 64)`.
-     - Return an error if parsing fails.
-     - Return an error if the ID is less than or equal to zero.
-  4. Use this helper in:
-     - `AuthorBooksHandler`
-     - `SeriesBooksHandler`
-     - `TagBooksHandler`
-     - `BookDetailHandler`
-     - `CoverHandler`
-     - `BookFileHandler`
-  5. Return `400 Bad Request` for invalid IDs.
-  6. Add tests for invalid author, series, tag, book, cover, and download IDs.
-  7. Run:
-     ```bash
-     GOCACHE=/tmp/kopds-gocache go test ./internal/api
-     ```
+  - **Repos:** kopds
+  - **Read:** none
+  - **Edit:** kopds/internal/api/handlers.go, kopds/internal/api/handlers_test.go
+  - **Instructions:** Add `parsePositiveID(value string) (int64, error)`. Use it in route handlers (AuthorBooks, SeriesBooks, TagBooks, BookDetail, Cover, BookFile) and return `400 Bad Request` if invalid. Add tests.
+  - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/api`
+  - **Done when:** IDs are validated and tests pass
 
 - [ ] **UR2-6.3 Check row iteration errors**
-  1. Open `/home/nathan/koserver/kopds/internal/database/book_repository.go`.
-  2. In `Search`, after iterating rows and before using the IDs, check:
-     ```go
-     if err := rows.Err(); err != nil {
-         return nil, 0, err
-     }
-     ```
-  3. In `listBooks`, do the same after scanning IDs.
-  4. Prefer `defer rows.Close()` after checking that `QueryContext` succeeded.
-  5. Run:
-     ```bash
-     GOCACHE=/tmp/kopds-gocache go test ./internal/database
-     ```
+  - **Repos:** kopds
+  - **Read:** none
+  - **Edit:** kopds/internal/database/book_repository.go
+  - **Instructions:** In `Search` and `listBooks`, add `if err := rows.Err(); err != nil` checks after iteration. Use `defer rows.Close()` after successful `QueryContext`.
+  - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/database`
+  - **Done when:** row errors are checked and tests pass
 
 - [ ] **UR2-6.4 Remove duplicate KOPDS reindex helper**
-  1. Open `/home/nathan/koserver/kopds/internal/database/book_repository.go`.
-  2. Compare method `func (r *sqliteBookRepository) ReindexBook(...)` with package function `func ReindexBook(...)`.
-  3. If the package function is unused, delete it.
-  4. If it is still needed, make both call a single private helper that contains the SQL once.
-  5. Run:
-     ```bash
-     GOCACHE=/tmp/kopds-gocache go test ./internal/database ./internal/scanner
-     ```
+  - **Repos:** kopds
+  - **Read:** none
+  - **Edit:** kopds/internal/database/book_repository.go
+  - **Instructions:** Consolidate `(*sqliteBookRepository).ReindexBook` and package `ReindexBook` into a single SQL execution. Delete unused version if applicable.
+  - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/database ./internal/scanner`
+  - **Done when:** duplicate is removed and tests pass
 
 - [ ] **UR2-6.5 Escape Calibre SQLite read-only DSN**
-  1. Open `/home/nathan/koserver/kopds/internal/scanner/calibre_reader.go`.
-  2. Find:
-     ```go
-     dsn := fmt.Sprintf("file:%s?mode=ro", path)
-     ```
-  3. Replace the ad hoc string building with a safe SQLite URI construction that handles spaces, `?`, `#`, and other special characters in file paths.
-  4. Add tests using a temporary database path with spaces and special characters.
-  5. Run:
-     ```bash
-     GOCACHE=/tmp/kopds-gocache go test ./internal/scanner
-     ```
+  - **Repos:** kopds
+  - **Read:** none
+  - **Edit:** kopds/internal/scanner/calibre_reader.go, kopds/internal/scanner/calibre_reader_test.go
+  - **Instructions:** Replace string concatenation `fmt.Sprintf("file:%s?mode=ro", path)` with a safe SQLite URI format handling spaces and special characters. Add tests.
+  - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/scanner`
+  - **Done when:** DSN is escaped safely and tests pass
 
 - [ ] **UR2-6.6 Batch hydrate listed books**
-  1. Open `/home/nathan/koserver/kopds/internal/database/book_repository.go`.
-  2. Find `listBooks` and `Search`.
-  3. Notice they first fetch IDs and then call `GetByID` once per book.
-  4. Add a helper that fetches all requested books and their authors, tags, formats, and series in batches.
-  5. Keep output order the same as the ID order.
-  6. Add tests proving list order is unchanged.
-  7. Benchmark or log query count before and after if possible.
-  8. Run:
-     ```bash
-     GOCACHE=/tmp/kopds-gocache go test ./internal/database ./internal/api
-     ```
+  - **Repos:** kopds
+  - **Read:** none
+  - **Edit:** kopds/internal/database/book_repository.go, kopds/internal/database/book_repository_test.go
+  - **Instructions:** Refactor `listBooks` and `Search` to fetch relations (authors, tags, etc.) in batches rather than calling `GetByID` in a loop. Retain ID order. Add tests ensuring order.
+  - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/database ./internal/api`
+  - **Done when:** batch hydration implemented and tests pass
 
 Acceptance criteria for Phase 6:
-
 - Author pages return the right books.
 - Invalid numeric path values return `400`.
 - Search/list code checks row iteration errors.
@@ -497,45 +315,30 @@ Acceptance criteria for Phase 6:
 Goal: make KOSYNC sync behavior more observable and avoid unnecessary maintenance work.
 
 - [ ] **UR2-7.1 Report stale progress updates**
-  1. Open `/home/nathan/koserver/kosync/internal/database/sqlite.go`.
-  2. Change `UpsertProgress` so callers can tell whether a row was inserted or updated.
-  3. One simple approach is to return `(bool, error)` where `true` means the row changed.
-  4. Update callers in `internal/api/handlers.go`.
-  5. If a client sends an older or equal timestamp, return `200 OK` but log that the stale update was ignored.
-  6. Add tests for:
-     - New progress returns changed.
-     - Newer timestamp returns changed.
-     - Older timestamp returns unchanged.
-     - Equal timestamp returns unchanged.
-  7. Run:
-     ```bash
-     GOCACHE=/tmp/kosync-gocache go test ./internal/database ./internal/api
-     ```
+  - **Repos:** kosync
+  - **Read:** none
+  - **Edit:** kosync/internal/database/sqlite.go, kosync/internal/api/handlers.go, kosync/internal/database/sqlite_test.go, kosync/internal/api/handlers_test.go
+  - **Instructions:** Change `UpsertProgress` to return `(bool, error)` to indicate if row changed. In handlers, if unchanged (stale or equal timestamp), return 200 OK but log that it was ignored. Add tests.
+  - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/database ./internal/api`
+  - **Done when:** tests pass; stale updates handled
 
 - [ ] **UR2-7.2 Skip storage cap checks when progress did not change**
-  1. Open `/home/nathan/koserver/kosync/internal/api/handlers.go`.
-  2. Use the changed/unchanged result from `UpsertProgress`.
-  3. Only call `storage.EnforceStorageCap` when a row was inserted or updated.
-  4. Add tests proving stale updates do not call storage-cap enforcement. If direct testing is hard, add a small interface around storage and use a fake in the handler test.
-  5. Run:
-     ```bash
-     GOCACHE=/tmp/kosync-gocache go test ./internal/api
-     ```
+  - **Repos:** kosync
+  - **Read:** none
+  - **Edit:** kosync/internal/api/handlers.go, kosync/internal/api/handlers_test.go
+  - **Instructions:** Use the changed boolean from `UpsertProgress`. Call `EnforceStorageCap` only if progress actually changed. Add tests.
+  - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/api`
+  - **Done when:** storage check is conditional and tests pass
 
 - [ ] **UR2-7.3 Add progress timestamp index**
-  1. Open `/home/nathan/koserver/kosync/internal/database/sqlite.go`.
-  2. In `Migrate`, after creating the `progress` table, add:
-     ```sql
-     CREATE INDEX IF NOT EXISTS idx_progress_timestamp ON progress(timestamp);
-     ```
-  3. Add a test that queries `sqlite_master` and confirms the index exists.
-  4. Run:
-     ```bash
-     GOCACHE=/tmp/kosync-gocache go test ./internal/database
-     ```
+  - **Repos:** kosync
+  - **Read:** none
+  - **Edit:** kosync/internal/database/sqlite.go, kosync/internal/database/sqlite_test.go
+  - **Instructions:** Add `CREATE INDEX IF NOT EXISTS idx_progress_timestamp ON progress(timestamp);` to `Migrate`. Add test checking index presence.
+  - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/database`
+  - **Done when:** index created and tests pass
 
 Acceptance criteria for Phase 7:
-
 - Stale progress updates are visible in logs and do not pretend to update storage.
 - Storage cap work only runs when progress changes.
 - Progress pruning has an index to support timestamp ordering.
@@ -545,71 +348,46 @@ Acceptance criteria for Phase 7:
 Goal: make the public project shape and documentation match the final behavior.
 
 - [ ] **UR2-8.1 Change KOSYNC module path**
-  1. Open `/home/nathan/koserver/kosync/go.mod`.
-  2. Change:
-     ```go
-     module kosync
-     ```
-     to:
-     ```go
-     module github.com/nlafevers/kosync
-     ```
-  3. Replace imports that start with `kosync/` with `github.com/nlafevers/kosync/`.
-  4. Run:
-     ```bash
-     GOCACHE=/tmp/kosync-gocache go test ./...
-     ```
+  - **Repos:** kosync
+  - **Read:** none
+  - **Edit:** kosync/go.mod, kosync/**/*.go
+  - **Instructions:** Change module name to `github.com/nlafevers/kosync`. Update all internal imports.
+  - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./...`
+  - **Done when:** module renamed and tests pass
 
 - [ ] **UR2-8.2 Update app documentation**
-  1. Open both app READMEs.
-  2. Update Go version requirements.
-  3. Update rate-limit configuration references.
-  4. Update KOSYNC registration docs to say registration is disabled by default.
-  5. Update KOSYNC docs to prefer `KOSYNC_DATABASE_PATH` and mention `KOSYNC_DB_PATH` only as a legacy alias.
-  6. Update examples in `config/config.yaml` and `deploy/docker-compose.yml`.
-  7. Commit documentation changes separately in each app repo.
+  - **Repos:** kopds, kosync
+  - **Read:** none
+  - **Edit:** kopds/README.md, kosync/README.md, kosync/config/config.yaml, kosync/deploy/docker-compose.yml
+  - **Instructions:** Update Go versions, rate-limit configs, KOSYNC registration defaults, and `KOSYNC_DATABASE_PATH` env vars. Commit separately.
+  - **Verify:** visual inspection
+  - **Done when:** docs are up to date
 
 - [ ] **UR2-8.3 Update uniformity inventories**
-  1. Open:
-     - `/home/nathan/koserver/kopds/UNIFORMITY.md`
-     - `/home/nathan/koserver/kosync/UNIFORMITY.md`
-  2. Add newly identical or intentionally aligned items:
-     - CLI storage helpers.
-     - `OpenSQLite`, `Migrate`, `NewSQLite`, `NewStorage` (not `InitDB`).
-     - `UpdatePassword`.
-     - request ID generation.
-     - rate-limit helpers.
-     - storage-cap disabled check.
-  3. Add final audit notes for intentional differences.
-  4. Keep the two files as close to identical as practical.
-  5. Commit in each app repo.
+  - **Repos:** kopds, kosync
+  - **Read:** none
+  - **Edit:** kopds/UNIFORMITY.md, kosync/UNIFORMITY.md
+  - **Instructions:** Add newly uniform items: CLI storage helpers, SQLite wrappers, UpdatePassword, request IDs, rate-limits, cap checks. Keep files identical.
+  - **Verify:** `diff kopds/UNIFORMITY.md kosync/UNIFORMITY.md`
+  - **Done when:** inventories updated and identical
 
 - [ ] **UR2-8.4 Update root uniformity plan**
-  1. Open `/home/nathan/koserver/uniformity-plan.md`.
-  2. Keep the completed historical checklist intact or clearly mark it as the previous round.
-  3. Add a short pointer to this roadmap.
-  4. Do not duplicate every instruction from this file unless desired.
+  - **Repos:** koserver
+  - **Read:** none
+  - **Edit:** uniformity-plan.md
+  - **Instructions:** Keep previous completed round marked. Add pointer to this roadmap.
+  - **Verify:** visual inspection
+  - **Done when:** plan updated
 
 - [ ] **UR2-8.5 Strengthen integration tests**
-  1. Open both integration scripts:
-     - `/home/nathan/koserver/kopds/test/integration_test.sh`
-     - `/home/nathan/koserver/kosync/test/integration_test.sh`
-  2. Make each script assert HTTP status codes, not only response bodies.
-  3. Make KOSYNC assert the KOReader content type.
-  4. Make KOPDS assert authenticated catalog access and unauthorized failures.
-  5. Ensure each script builds the binary, creates a temp database through the CLI, starts the server, tests HTTP behavior, and cleans up.
-  6. Run scripts in an environment that allows local listening:
-     ```bash
-     cd /home/nathan/koserver/kopds
-     ./test/integration_test.sh
-
-     cd /home/nathan/koserver/kosync
-     ./test/integration_test.sh
-     ```
-  7. Commit integration test updates separately in each app repo.
+  - **Repos:** kopds, kosync
+  - **Read:** none
+  - **Edit:** kopds/test/integration_test.sh, kosync/test/integration_test.sh
+  - **Instructions:** Assert HTTP status codes. KOSYNC asserts KOReader content type. KOPDS asserts auth success/failures. Scripts should be fully automated.
+  - **Verify:** `cd kopds && ./test/integration_test.sh && cd ../kosync && ./test/integration_test.sh`
+  - **Done when:** scripts run and pass
 
 Acceptance criteria for Phase 8:
-
 - KOSYNC has a canonical GitHub module path.
 - Docs match the new default security posture.
 - Uniformity inventories are current.
@@ -617,39 +395,31 @@ Acceptance criteria for Phase 8:
 
 ## Phase 9: Final Verification Checklist
 
-Run this only after all phases are done.
+Run only after all phases are done.
 
-- [ ] **UR2-9.1 Final KOPDS verification**
-  1. Open `/home/nathan/koserver/kopds`.
-  2. Run:
-     ```bash
-     gofmt -l .
-     GOCACHE=/tmp/kopds-gocache go vet ./...
-     GOCACHE=/tmp/kopds-gocache go test ./...
-     GOCACHE=/tmp/kopds-gocache go run golang.org/x/vuln/cmd/govulncheck@latest ./...
-     ./test/integration_test.sh
-     ```
-  3. Confirm all commands pass.
+- [ ] **FINAL-9.1 Final KOPDS verification**
+  - **Repos:** kopds
+  - **Read:** none
+  - **Edit:** none
+  - **Instructions:** Run full test suite, vet, formatting, and integration checks on KOPDS.
+  - **Verify:** `cd kopds && gofmt -l . && GOCACHE=/tmp/kopds-gocache go vet ./... && GOCACHE=/tmp/kopds-gocache go test ./... && GOCACHE=/tmp/kopds-gocache go run golang.org/x/vuln/cmd/govulncheck@latest ./... && ./test/integration_test.sh`
+  - **Done when:** all commands pass
 
-- [ ] **UR2--9.2 Final KOSYNC verification**
-  1. Open `/home/nathan/koserver/kosync`.
-  2. Run:
-     ```bash
-     gofmt -l .
-     GOCACHE=/tmp/kosync-gocache go vet ./...
-     GOCACHE=/tmp/kosync-gocache go test ./...
-     GOCACHE=/tmp/kosync-gocache go run golang.org/x/vuln/cmd/govulncheck@latest ./...
-     ./test/integration_test.sh
-     ```
-  3. Confirm all commands pass.
+- [ ] **FINAL-9.2 Final KOSYNC verification**
+  - **Repos:** kosync
+  - **Read:** none
+  - **Edit:** none
+  - **Instructions:** Run full test suite, vet, formatting, and integration checks on KOSYNC.
+  - **Verify:** `cd kosync && gofmt -l . && GOCACHE=/tmp/kosync-gocache go vet ./... && GOCACHE=/tmp/kosync-gocache go test ./... && GOCACHE=/tmp/kosync-gocache go run golang.org/x/vuln/cmd/govulncheck@latest ./... && ./test/integration_test.sh`
+  - **Done when:** all commands pass
 
-- [ ] **UR2-9.3 Final root documentation verification**
-  1. Open `/home/nathan/koserver`.
-  2. Run:
-     ```bash
-     git status --short
-     ```
-  3. Confirm only intentional root documentation files are changed.
+- [ ] **FINAL-9.3 Final root documentation verification**
+  - **Repos:** koserver
+  - **Read:** none
+  - **Edit:** none
+  - **Instructions:** Check git status in the workspace root.
+  - **Verify:** `cd .. && git status --short`
+  - **Done when:** only intentional root docs are changed
 
 ## Notes For Future Implementers
 
