@@ -43,25 +43,27 @@ Context efficiency is achieved structurally: the orchestrator (you) deploys a su
 ## Architecture
 
 ```
-┌─────────────────────────────────┐
-│  Orchestrator (you)             │
+┌──────────────┐
+│     User     │ 
+└─┬──────────▲─┘
+  │ deploy   │ report
+┌─▼──────────┴────────────────────┐        
+│  Orchestrator (you)             │        
 │  • Reads roadmap                │
 │  • Finds next incomplete step   │
 │  • Builds subagent prompt       │
 │  • Deploys step executor        │
 │  • Reports results to user      │
-└────────┬───────────┬────────────┘
-         │  deploy   │  report
-    ┌────▼────┐ ┌────▼────┐
-    │ Step    │ │ Step    │  ...
-    │ Executor│ │ Executor│
-    │ (sub)   │ │ (sub)   │
-    └─────────┘ └─────────┘
-    • Reads step files only
-    • Implements changes
-    • Verifies
-    • Updates roadmap annotation
-    • Commits via conventional-committer
+└────┬────────────────▲───────────┘
+     │ deploy         │ report
+┌────▼────────────────┴─────────────────┐
+│ Step Executor (subagent)              │ 
+│  • Reads step files only              │
+│  • Implements changes                 │
+│  • Verifies                           │
+│  • Updates roadmap annotation         │
+│  • Commits via conventional-committer │
+└───────────────────────────────────────┘
 ```
 
 ## Orchestrator Workflow
@@ -71,7 +73,7 @@ Context efficiency is achieved structurally: the orchestrator (you) deploys a su
 Read **only**:
 
 - The roadmap file
-- Project `AGENTS.md` at the workspace root (for git rules and repo structure)
+- `AGENTS.md` at the workspace root (for git rules and repo structure)
 - `references/annotation-format.md` if the roadmap's checkbox format is unclear
 
 Do **not** read implementation files — that is the subagent's job.
@@ -92,10 +94,11 @@ From the target step, extract:
 - **Repos** — which git roots change
 - **Read** — files to read for context
 - **Edit** — files allowed to change
-- **Verify** — exact commands to run
+- **Instructions** — implementation instructions
+- **Verify** — exact verification commands to run
 - **Done when** — acceptance criteria
 
-If the step lacks **Read** / **Edit** lists, ask the user to rewrite it with **roadmap-writer** before proceeding.
+If the step lacks this schema, ask the user to rewrite it with **roadmap-writer** before proceeding.
 
 ### 4. Deploy Step Executor
 
@@ -142,6 +145,7 @@ Implement a single roadmap step.  Follow these rules strictly.
 - **Repos:** {repos}
 - **Read:** {read_files}
 - **Edit:** {edit_files}
+- **Instructions:** {instructions}
 - **Verify:** {verify_commands}
 - **Done when:** {done_when}
 
@@ -197,13 +201,13 @@ When finished, report back with exactly these fields:
 Copy-paste for the user when starting a new session:
 
 ```text
-Use roadmap-implementer on @ur2-roadmap.md — implement the next incomplete step only.
+Use roadmap-implementer on @{roadmap}.md — implement the next incomplete step only.
 ```
 
 Variants:
 
-- `Use roadmap-implementer on @ur2-roadmap.md — resume interrupted step` (when `[-]` exists)
-- `Use roadmap-implementer on @ur2-roadmap.md — run Phase 3 unattended` (explicit multi-step authorization)
+- `Use roadmap-implementer on @{roadmap}.md — resume interrupted step` (when `[-]` exists)
+- `Use roadmap-implementer on @{roadmap}.md — run Phase 3 unattended` (explicit multi-step authorization)
 
 ## Output
 
