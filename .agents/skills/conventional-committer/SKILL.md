@@ -77,6 +77,38 @@ Heavyweight models are used to perform large context audits or planning passes a
     git -C "$REPO_DIR" --no-pager log -1 --format="%h %s"
     git -C "$REPO_DIR" --no-pager show --stat HEAD
     ```
+6. Report the result using the standard output format defined in **Output Format** below.
+
+## Output Format
+
+After each commit attempt, report the result using this exact structure:
+
+```
+<status>
+Repo: <repo-name>
+Commit: <short-hash>
+<commit-subject-line>
+```
+
+- **status** — one short sentence: `Committed successfully` on success, or `Failed: <reason>` on failure (e.g. `Failed: nothing to commit`, `Failed: pre-commit hook rejected changes`).
+- **repo-name** — the basename of `$REPO_DIR` (e.g. `koserver`, `kopds`, `kosync`).
+- **short-hash** — the 7-character hash from `git log -1 --format="%h"`; use `—` if the commit did not happen.
+- **commit-subject-line** — the first line of the commit message; omit if the commit did not happen.
+
+**Success example**:
+```
+Committed successfully
+Repo: koserver
+Commit: 7742565
+docs(roadmap): consolidate ur2 roadmap into standardized format
+```
+
+**Failure example**:
+```
+Failed: nothing to commit
+Repo: kopds
+Commit: —
+```
 
 ## Default Commit Format
 
