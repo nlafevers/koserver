@@ -11,7 +11,7 @@ Writes or rewrites implementation roadmaps as sequential, self-contained steps s
 
 - When asked to generate a new implementation roadmap for a project.
 - When asked to rewrite an existing roadmap to improve clarity, structure, task granularity, or context efficiency.
-- When asked to migrate legacy numbered substeps to **Read / Edit / Verify / Done when** format.
+- When asked to migrate legacy numbered substeps to **Read / Edit / Instructions / Verify / Done when** format.
 - When asked to audit a codebase once and capture findings in a structured roadmap.
 
 ## When Not to Use This Skill
@@ -36,6 +36,7 @@ Heavyweight models are used to perform large context audits or planning passes a
 - **Roadmap-Only Edits** — planning changes to the codebase is strictly separated from implementation; edit only the roadmap file.
 - **Durable Plans** — capture all audit findings, planning decisions, and other results of the planning pass in the roadmap document; do not rely on the chat history or memory.
 - **Thinking Upfront** — the planning phase is the time for deep thinking with a large context; the steps of the implementation plan should be self-contained and require minimal context or judgment.
+- **Prescriptive Guidance** — the roadmap must explicitly detail *what* needs to be coded, changed, or configured; do not rely step title or "Done when" criteria to imply the work.
 - **Self-Contained Steps** — each step should be implementable in isolation; avoid carryover reads or references to other steps.
 - **Progress Annotation** - author new steps as `[ ]` only; do not set `[-]` or `[x]` unless **preserving** completed work during a rewrite.  The git log and the roadmap annotations are the durable source of truth for what has been done, not the chat history or memory.
 
@@ -75,7 +76,7 @@ When building from findings rather than a supplied task list:
 
 For each atomic step, apply Part 2 of [`references/roadmap-template.md`](references/roadmap-template.md):
 
-- **Repos**, **Read** (≤5), **Edit** (≤5), **Verify** (exact commands), **Done when**
+- **Repos**, **Read** (≤5), **Edit** (≤5), **Instructions** (explicit, step-by-step technical directions on what to code/change), **Verify** (exact commands), **Done when**
 - Split steps that exceed the file budget or mix unrelated concerns
 - Convert legacy lists (e.g. `1. Open ... 2. Run ...`) into the template fields
 
@@ -98,7 +99,7 @@ Use [`../roadmap-implementer/references/annotation-format.md`](../roadmap-implem
 Run the author checklist in [`references/roadmap-template.md`](references/roadmap-template.md):
 
 - Every step stands alone (no prohibited carryover phrasing)
-- Every step has **Verify** and **Done when**
+- Every step has **Instructions**, **Verify**, and **Done when**
 - File lists within budget or step is split
 
 ### 9. Output
