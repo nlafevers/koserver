@@ -133,7 +133,7 @@ Author new work as `[ ]` only. Use annotation rules from `../roadmap-implementer
 - `[-]` work in progress (set by implementor, not author)
 - `[x]` completed with optional `(Commit: hash)` (set by implementor)
 
-When rewriting, preserve existing `[x]` and commit hashes; do not reset completed steps unless the user asks.
+When rewriting, preserve existing states and commit hashes; do not reset states unless the user asks.
 
 ### Prohibited Phrasing
 

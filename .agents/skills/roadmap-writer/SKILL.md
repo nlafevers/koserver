@@ -35,8 +35,8 @@ Heavyweight models are used to perform large context audits or planning passes a
 
 - **Roadmap-Only Edits** — planning changes to the codebase is strictly separated from implementation; edit only the roadmap file.
 - **Durable Plans** — capture all audit findings, planning decisions, and other results of the planning pass in the roadmap document; do not rely on the chat history or memory.
-- **Thinking Upfront** — the planning phase is the time for deep thinking with a large context; the steps of the implementation plan should be self-contained and require minimal context or thinking.
-- **Self-contained Steps** — each step should be implementable in isolation; avoid carryover reads or references to other steps.
+- **Thinking Upfront** — the planning phase is the time for deep thinking with a large context; the steps of the implementation plan should be self-contained and require minimal context or judgment.
+- **Self-Contained Steps** — each step should be implementable in isolation; avoid carryover reads or references to other steps.
 - **Progress Annotation** - author new steps as `[ ]` only; do not set `[-]` or `[x]` unless **preserving** completed work during a rewrite.  The git log and the roadmap annotations are the durable source of truth for what has been done, not the chat history or memory.
 
 ## Workflow
@@ -45,9 +45,10 @@ Heavyweight models are used to perform large context audits or planning passes a
 
 Clarify (or infer from the user message):
 
-- Goal and target file path (e.g. `ur2-roadmap.md`)
+- Goal
+- Target roadmap path (e.g. `ur2-roadmap.md`)
 - Scope: full roadmap, single phase, or append new phase
-- Whether to preserve completed `[x]` steps and commit hashes in a rewrite
+- Whether to preserve work-in-progress `[-]` steps, and completed `[x]` steps and commit hashes in a rewrite
 
 ### 2. Gather Constraints
 
@@ -61,8 +62,8 @@ Read as needed:
 
 When building from findings rather than a supplied task list:
 
-- Perform one structured audit pass; record bullets under **Audit findings to address**
-- Cap exploratory reads where possible; prefer targeted files over whole-repo grep unless necessary
+- Perform structured audit passes
+- Record bullets under **Audit findings to address**
 
 ### 4. Outline Phases
 
@@ -89,7 +90,8 @@ Follow Part 1 of [`references/roadmap-template.md`](references/roadmap-template.
 Use [`../roadmap-implementer/references/annotation-format.md`](../roadmap-implementer/references/annotation-format.md):
 
 - New work: `[ ]` with `**ID**` in the line
-- Preserved completed work: keep `[x]` and `(Commit: hash)` as-is
+- Preserve completed work: keep `[x]` and `(Commit: hash)` as-is
+- Preserve work-in-progress: keep `[-]` as-is
 
 ### 8. Validate
 
