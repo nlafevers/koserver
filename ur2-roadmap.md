@@ -371,7 +371,7 @@ Goal: make the public project shape and documentation match the final behavior.
   - **Verify:** `diff kopds/UNIFORMITY.md kosync/UNIFORMITY.md`
   - **Done when:** inventories updated and identical
 
-- [ ] **UR2-8.4 Update root uniformity plan**
+- [-] **UR2-8.4 Update root uniformity plan**
   - **Repos:** koserver
   - **Read:** none
   - **Edit:** uniformity-plan.md
