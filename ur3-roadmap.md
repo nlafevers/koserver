@@ -164,7 +164,7 @@ Acceptance criteria for Phase 3:
 
 Goal: update the uniformity inventories and the round plan to reflect the completed prune, keeping the two `UNIFORMITY.md` files byte-identical.
 
-- [ ] **UR3-4.1** Reconcile the `UNIFORMITY.md` inventories
+- [x] **UR3-4.1** Reconcile the `UNIFORMITY.md` inventories (Commits: kopds:d6b86a4, kosync:7f76272)
   - **Repos:** kopds, kosync
   - **Read:** kopds/UNIFORMITY.md, kosync/UNIFORMITY.md
   - **Edit:** kopds/UNIFORMITY.md, kosync/UNIFORMITY.md
