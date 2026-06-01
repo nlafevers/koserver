@@ -79,7 +79,7 @@ Goal: remove KOPDS code that has no non-test callers, updating or deleting only 
   - **Verify:** `cd kopds && gofmt -l . && GOCACHE=/tmp/kopds-gocache go build ./... && GOCACHE=/tmp/kopds-gocache go test ./internal/opds ./internal/api`
   - **Done when:** the listed Atom symbols are removed, the package compiles, gofmt prints nothing, and tests pass
 
-- [ ] **UR3-1.6** Promote `golang.org/x/time` to a direct dependency
+- [x] **UR3-1.6** Promote `golang.org/x/time` to a direct dependency (Commit: 830fe2f)
   - **Repos:** kopds
   - **Read:** kopds/go.mod
   - **Edit:** kopds/go.mod, kopds/go.sum
