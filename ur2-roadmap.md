@@ -206,7 +206,7 @@ Acceptance criteria for Phase 4:
 
 Goal: reduce public attack surface and make KOSYNC protocol responses consistent.
 
-- [ ] **UR2-5.1 Disable KOSYNC public registration by default**
+- [x] **UR2-5.1 Disable KOSYNC public registration by default** (Commit: edc151d)
   - **Repos:** kosync
   - **Read:** none
   - **Edit:** kosync/internal/config/config.go, kosync/config/config.yaml, kosync/deploy/docker-compose.yml, kosync/README.md, kosync/internal/config/config_test.go
