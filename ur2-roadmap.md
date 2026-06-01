@@ -230,7 +230,7 @@ Goal: reduce public attack surface and make KOSYNC protocol responses consistent
   - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/api ./internal/config ./cmd/kopds`
   - **Done when:** rate limits are active on failed auth and tests pass
 
-- [ ] **UR2-5.4 Fix KOSYNC response content type**
+- [x] **UR2-5.4 Fix KOSYNC response content type** (Commit: 9801308)
   - **Repos:** kosync
   - **Read:** none
   - **Edit:** kosync/internal/api/handlers.go, kosync/cmd/kosync/main.go, kosync/internal/api/handlers_test.go
