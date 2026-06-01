@@ -256,7 +256,7 @@ Acceptance criteria for Phase 5:
 
 Goal: fix confirmed KOPDS bugs and reduce unnecessary query work.
 
-- [ ] **UR2-6.1 Fix KOPDS author listing query**
+- [x] **UR2-6.1 Fix KOPDS author listing query** (Commit: 146ff0d)
   - **Repos:** kopds
   - **Read:** none
   - **Edit:** kopds/internal/database/book_repository.go, kopds/internal/database/book_repository_test.go
