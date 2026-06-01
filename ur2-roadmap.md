@@ -355,7 +355,7 @@ Goal: make the public project shape and documentation match the final behavior.
   - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./...`
   - **Done when:** module renamed and tests pass
 
-- [ ] **UR2-8.2 Update app documentation**
+- [x] **UR2-8.2 Update app documentation** (Commits: kopds:efac3fb, kosync:2fd5718)
   - **Repos:** kopds, kosync
   - **Read:** none
   - **Edit:** kopds/README.md, kosync/README.md, kosync/config/config.yaml, kosync/deploy/docker-compose.yml
