@@ -379,7 +379,7 @@ Goal: make the public project shape and documentation match the final behavior.
   - **Verify:** visual inspection
   - **Done when:** plan updated
 
-- [ ] **UR2-8.5 Strengthen integration tests**
+- [x] **UR2-8.5 Strengthen integration tests** (Commits: kopds:e50ac3c, kosync:d17ac49)
   - **Repos:** kopds, kosync
   - **Read:** none
   - **Edit:** kopds/test/integration_test.sh, kosync/test/integration_test.sh
