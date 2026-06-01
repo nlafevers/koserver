@@ -363,7 +363,7 @@ Goal: make the public project shape and documentation match the final behavior.
   - **Verify:** visual inspection
   - **Done when:** docs are up to date
 
-- [ ] **UR2-8.3 Update uniformity inventories**
+- [x] **UR2-8.3 Update uniformity inventories** (Commits: kopds:873ef8f, kosync:ad7e18d)
   - **Repos:** kopds, kosync
   - **Read:** none
   - **Edit:** kopds/UNIFORMITY.md, kosync/UNIFORMITY.md
