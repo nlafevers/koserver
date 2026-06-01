@@ -238,7 +238,7 @@ Goal: reduce public attack surface and make KOSYNC protocol responses consistent
   - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/api ./cmd/kosync`
   - **Done when:** routes use correct content type and tests pass
 
-- [ ] **UR2-5.5 Make KOSYNC registration timing less distinguishable**
+- [x] **UR2-5.5 Make KOSYNC registration timing less distinguishable** (Commit: 3543be1)
   - **Repos:** kosync
   - **Read:** none
   - **Edit:** kosync/internal/api/handlers.go, kosync/internal/api/handlers_test.go
