@@ -160,7 +160,8 @@ Examples: `validation`, `auth`, `cookie-service`, `template`, `config`, `tests`,
 | `Closes #N`                    | Same as Fixes                   |
 | `Co-authored-by: Name <email>` | Credit co-contributors          |
 
-Place trailers at end of the body after a blank line. See `references/commit-examples.md` for examples.
+- Place trailers at end of the body after a blank line. See `references/commit-examples.md` for examples.
+- Only credit co-authors if specifically instructed to do so by the user; and never credit agents or tools as co-authors.
 
 ## Breaking Changes
 
