@@ -123,7 +123,7 @@ Goal: make the command-line user management code as identical as practical.
   - **Verify:** N/A
   - **Done when:** Completed in TDL-001
 
-- [ ] **UR2-3.2 Add KOPDS storage user methods**
+- [x] **UR2-3.2 Add KOPDS storage user methods** (Commit: 18b5d21)
   - **Repos:** kopds
   - **Read:** kopds/internal/database/user_repository.go
   - **Edit:** kopds/internal/database/sqlite.go, kopds/internal/database/user_repository_test.go
@@ -131,7 +131,7 @@ Goal: make the command-line user management code as identical as practical.
   - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/database ./cmd/kopds`
   - **Done when:** tests pass; storage methods implemented
 
-- [ ] **UR2-3.3 Rename or wrap KOSYNC password update**
+- [x] **UR2-3.3 Rename or wrap KOSYNC password update** (Commit: 36e05a4)
   - **Repos:** kosync
   - **Read:** none
   - **Edit:** kosync/internal/database/sqlite.go, kosync/cmd/kosync/main.go
