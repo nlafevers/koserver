@@ -139,7 +139,7 @@ Acceptance criteria for Phase 2:
 
 Goal: standardize the SQLite-open call name across both apps and remove the redundant wrapper, and eliminate the duplicated storage-cap size gate in both apps while preserving the package-level test seam.
 
-- [ ] **UR3-3.1** Standardize on `OpenSQLite` and remove `NewSQLite` in both apps
+- [x] **UR3-3.1** Standardize on `OpenSQLite` and remove `NewSQLite` in both apps (Commits: kopds:3d72d05, kosync:ba1cf30)
   - **Repos:** kopds, kosync
   - **Read:** kopds/cmd/kopds/main.go, kopds/internal/database/sqlite.go, kosync/internal/database/sqlite.go
   - **Edit:** kopds/cmd/kopds/main.go, kopds/internal/database/sqlite.go, kosync/internal/database/sqlite.go
