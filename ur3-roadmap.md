@@ -98,7 +98,7 @@ Acceptance criteria for Phase 1:
 
 Goal: remove KOSYNC code that has no non-test callers and collapse redundant indirection, without changing API or CLI behavior.
 
-- [ ] **UR3-2.1** Remove KOSYNC `GetRequestID`
+- [x] **UR3-2.1** Remove KOSYNC `GetRequestID` (Commit: b70dfa2)
   - **Repos:** kosync
   - **Read:** kosync/internal/api/context.go
   - **Edit:** kosync/internal/api/context.go
