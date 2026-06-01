@@ -106,7 +106,7 @@ Goal: remove KOSYNC code that has no non-test callers and collapse redundant ind
   - **Verify:** `cd kosync && gofmt -l . && GOCACHE=/tmp/kosync-gocache go build ./... && GOCACHE=/tmp/kosync-gocache go test ./internal/api ./cmd/kosync`
   - **Done when:** `GetRequestID` is gone, the package compiles, gofmt prints nothing, and tests pass
 
-- [ ] **UR3-2.2** Remove KOSYNC `models.User`
+- [x] **UR3-2.2** Remove KOSYNC `models.User` (Commit: 324727e)
   - **Repos:** kosync
   - **Read:** kosync/internal/models/models.go
   - **Edit:** kosync/internal/models/models.go
