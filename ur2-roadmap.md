@@ -280,7 +280,7 @@ Goal: fix confirmed KOPDS bugs and reduce unnecessary query work.
   - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/database`
   - **Done when:** row errors are checked and tests pass
 
-- [ ] **UR2-6.4 Remove duplicate KOPDS reindex helper**
+- [x] **UR2-6.4 Remove duplicate KOPDS reindex helper** (Commit: 1f08e32)
   - **Repos:** kopds
   - **Read:** none
   - **Edit:** kopds/internal/database/book_repository.go
