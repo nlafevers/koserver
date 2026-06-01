@@ -47,7 +47,7 @@ Goal: remove KOPDS code that has no non-test callers, updating or deleting only 
   - **Verify:** `cd kopds && gofmt -l . && GOCACHE=/tmp/kopds-gocache go build ./... && GOCACHE=/tmp/kopds-gocache go test ./internal/database ./internal/api ./cmd/kopds`
   - **Done when:** the five `*Storage` user methods and `TestStorageUserMethods` are gone, gofmt prints nothing, and tests pass
 
-- [ ] **UR3-1.2** Remove KOPDS `NewStorage` constructor
+- [x] **UR3-1.2** Remove KOPDS `NewStorage` constructor (Commit: b9b9702)
   - **Repos:** kopds
   - **Read:** kopds/internal/database/sqlite.go, kopds/internal/database/storage_cap_integration_test.go, kopds/internal/database/storage_cap_test.go
   - **Edit:** kopds/internal/database/sqlite.go, kopds/internal/database/storage_cap_integration_test.go, kopds/internal/database/storage_cap_test.go
