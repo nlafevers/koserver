@@ -314,7 +314,7 @@ Acceptance criteria for Phase 6:
 
 Goal: make KOSYNC sync behavior more observable and avoid unnecessary maintenance work.
 
-- [ ] **UR2-7.1 Report stale progress updates**
+- [x] **UR2-7.1 Report stale progress updates** (Commit: df6fdac)
   - **Repos:** kosync
   - **Read:** none
   - **Edit:** kosync/internal/database/sqlite.go, kosync/internal/api/handlers.go, kosync/internal/database/sqlite_test.go, kosync/internal/api/handlers_test.go
