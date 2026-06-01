@@ -180,7 +180,7 @@ Goal: make server startup, shutdown, logging, and shared middleware behavior eas
   - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/api && cd ../kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/api`
   - **Done when:** identically implemented in both and tests pass
 
-- [ ] **UR2-4.4 Enable SQLite foreign keys uniformly**
+- [x] **UR2-4.4 Enable SQLite foreign keys uniformly** (Commits: kopds:6d78b4e, kosync:b338a54)
   - **Repos:** kopds, kosync
   - **Read:** none
   - **Edit:** kopds/internal/database/sqlite.go, kosync/internal/database/sqlite.go, kopds/internal/database/sqlite_test.go, kosync/internal/database/sqlite_test.go
