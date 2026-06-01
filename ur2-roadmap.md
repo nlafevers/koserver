@@ -296,7 +296,7 @@ Goal: fix confirmed KOPDS bugs and reduce unnecessary query work.
   - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/scanner`
   - **Done when:** DSN is escaped safely and tests pass
 
-- [ ] **UR2-6.6 Batch hydrate listed books**
+- [x] **UR2-6.6 Batch hydrate listed books** (Commit: 4608d70)
   - **Repos:** kopds
   - **Read:** none
   - **Edit:** kopds/internal/database/book_repository.go, kopds/internal/database/book_repository_test.go
