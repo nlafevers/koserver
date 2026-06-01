@@ -264,7 +264,7 @@ Goal: fix confirmed KOPDS bugs and reduce unnecessary query work.
   - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/database ./internal/api`
   - **Done when:** join is fixed and test passes
 
-- [ ] **UR2-6.2 Validate KOPDS path IDs**
+- [x] **UR2-6.2 Validate KOPDS path IDs** (Commit: 1f59d8f)
   - **Repos:** kopds
   - **Read:** none
   - **Edit:** kopds/internal/api/handlers.go, kopds/internal/api/handlers_test.go
