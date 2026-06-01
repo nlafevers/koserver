@@ -330,7 +330,7 @@ Goal: make KOSYNC sync behavior more observable and avoid unnecessary maintenanc
   - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/api`
   - **Done when:** storage check is conditional and tests pass
 
-- [ ] **UR2-7.3 Add progress timestamp index**
+- [x] **UR2-7.3 Add progress timestamp index** (Commit: c81be0f)
   - **Repos:** kosync
   - **Read:** none
   - **Edit:** kosync/internal/database/sqlite.go, kosync/internal/database/sqlite_test.go
