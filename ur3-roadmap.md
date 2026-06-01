@@ -147,7 +147,7 @@ Goal: standardize the SQLite-open call name across both apps and remove the redu
   - **Verify:** `cd kopds && gofmt -l . && GOCACHE=/tmp/kopds-gocache go build ./... && GOCACHE=/tmp/kopds-gocache go test ./... && cd ../kosync && gofmt -l . && GOCACHE=/tmp/kosync-gocache go build ./... && GOCACHE=/tmp/kosync-gocache go test ./...`
   - **Done when:** neither repo defines `NewSQLite`, all SQLite opens call `OpenSQLite`, gofmt prints nothing in both, and tests pass in both; one commit per repo
 
-- [ ] **UR3-3.2** Remove the duplicated storage-cap size gate in both apps
+- [x] **UR3-3.2** Remove the duplicated storage-cap size gate in both apps (Commits: kopds:10931c9, kosync:dbd901b)
   - **Repos:** kopds, kosync
   - **Read:** kopds/internal/database/sqlite.go, kopds/internal/database/storage_cap_test.go, kosync/internal/database/sqlite.go, kosync/internal/database/storage_cap_test.go
   - **Edit:** kopds/internal/database/sqlite.go, kosync/internal/database/sqlite.go
