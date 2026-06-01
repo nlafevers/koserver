@@ -222,7 +222,7 @@ Goal: reduce public attack surface and make KOSYNC protocol responses consistent
   - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/api ./cmd/kosync`
   - **Done when:** rate limits are active and tests pass
 
-- [ ] **UR2-5.3 Add equivalent KOPDS failed-auth rate limiting**
+- [x] **UR2-5.3 Add equivalent KOPDS failed-auth rate limiting** (Commit: 9686b11)
   - **Repos:** kopds
   - **Read:** none
   - **Edit:** kopds/internal/config/config.go, kopds/internal/api/middleware.go, kopds/internal/api/middleware_test.go
