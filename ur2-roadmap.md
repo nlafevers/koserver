@@ -288,7 +288,7 @@ Goal: fix confirmed KOPDS bugs and reduce unnecessary query work.
   - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/database ./internal/scanner`
   - **Done when:** duplicate is removed and tests pass
 
-- [ ] **UR2-6.5 Escape Calibre SQLite read-only DSN**
+- [x] **UR2-6.5 Escape Calibre SQLite read-only DSN** (Commit: eb6f06f)
   - **Repos:** kopds
   - **Read:** none
   - **Edit:** kopds/internal/scanner/calibre_reader.go, kopds/internal/scanner/calibre_reader_test.go
