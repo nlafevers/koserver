@@ -188,7 +188,7 @@ Goal: make server startup, shutdown, logging, and shared middleware behavior eas
   - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/database && cd ../kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/database`
   - **Done when:** PRAGMA is active and tests pass
 
-- [ ] **UR2-4.5 Move disabled storage-cap check to the top**
+- [x] **UR2-4.5 Move disabled storage-cap check to the top** (Commits: kopds:6c2cb5b, kosync:82326df)
   - **Repos:** kopds, kosync
   - **Read:** none
   - **Edit:** kopds/internal/database/sqlite.go, kosync/internal/database/sqlite.go, kopds/internal/database/sqlite_test.go, kosync/internal/database/sqlite_test.go
