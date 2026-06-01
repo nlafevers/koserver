@@ -397,7 +397,7 @@ Acceptance criteria for Phase 8:
 
 Run only after all phases are done.
 
-- [ ] **FINAL-9.1 Final KOPDS verification**
+- [x] **FINAL-9.1 Final KOPDS verification** (Commit: none — verification only)
   - **Repos:** kopds
   - **Read:** none
   - **Edit:** none
