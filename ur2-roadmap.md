@@ -139,7 +139,7 @@ Goal: make the command-line user management code as identical as practical.
   - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/database ./cmd/kosync`
   - **Done when:** tests pass; new method name in use by CLI
 
-- [ ] **UR2-3.4 Make CLI functions copy-paste similar**
+- [x] **UR2-3.4 Make CLI functions copy-paste similar** (Commits: kopds:3191e0c, kosync:7e11170)
   - **Repos:** kopds, kosync
   - **Read:** none
   - **Edit:** kopds/cmd/kopds/main.go, kosync/cmd/kosync/main.go
