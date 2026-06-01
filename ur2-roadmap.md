@@ -322,7 +322,7 @@ Goal: make KOSYNC sync behavior more observable and avoid unnecessary maintenanc
   - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/database ./internal/api`
   - **Done when:** tests pass; stale updates handled
 
-- [ ] **UR2-7.2 Skip storage cap checks when progress did not change**
+- [x] **UR2-7.2 Skip storage cap checks when progress did not change** (Commit: 7b9d8e5)
   - **Repos:** kosync
   - **Read:** none
   - **Edit:** kosync/internal/api/handlers.go, kosync/internal/api/handlers_test.go
