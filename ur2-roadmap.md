@@ -347,7 +347,7 @@ Acceptance criteria for Phase 7:
 
 Goal: make the public project shape and documentation match the final behavior.
 
-- [ ] **UR2-8.1 Change KOSYNC module path**
+- [x] **UR2-8.1 Change KOSYNC module path** (Commit: 65a2530)
   - **Repos:** kosync
   - **Read:** none
   - **Edit:** kosync/go.mod, kosync/**/*.go
