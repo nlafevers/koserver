@@ -63,7 +63,7 @@ Goal: remove KOPDS code that has no non-test callers, updating or deleting only 
   - **Verify:** `cd kopds && gofmt -l . && GOCACHE=/tmp/kopds-gocache go build ./... && GOCACHE=/tmp/kopds-gocache go test ./internal/database ./internal/api ./cmd/kopds`
   - **Done when:** `Save` is gone from both the interface and the implementation, `TestUserRepository` uses `CreateUserIfNotExists`/`UpdatePassword`, gofmt prints nothing, and tests pass
 
-- [ ] **UR3-1.4** Remove KOPDS `BookService.GetLinkGenerator`
+- [x] **UR3-1.4** Remove KOPDS `BookService.GetLinkGenerator` (Commit: 230e979)
   - **Repos:** kopds
   - **Read:** kopds/internal/service/book_service.go
   - **Edit:** kopds/internal/service/book_service.go
