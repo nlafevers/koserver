@@ -214,7 +214,7 @@ Goal: reduce public attack surface and make KOSYNC protocol responses consistent
   - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/config ./internal/api`
   - **Done when:** default is true and tests pass
 
-- [ ] **UR2-5.2 Wire KOSYNC rate limiting**
+- [x] **UR2-5.2 Wire KOSYNC rate limiting** (Commit: 735b0ec)
   - **Repos:** kosync
   - **Read:** none
   - **Edit:** kosync/internal/config/config.go, kosync/internal/api/middleware.go, kosync/cmd/kosync/main.go, kosync/internal/api/handlers_test.go
