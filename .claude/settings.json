@@ -2,5 +2,6 @@
   "statusLine": {
     "type": "command",
     "command": "input=$(cat); model=$(echo \"$input\" | jq -r '.model.display_name // \"Claude\"'); dir=$(echo \"$input\" | jq -r '.workspace.current_dir // \"\"'); remaining=$(echo \"$input\" | jq -r '.context_window.remaining_percentage // empty'); branch=$(git --no-optional-locks -C \"$dir\" rev-parse --abbrev-ref HEAD 2>/dev/null); out=\"$model\"; [ -n \"$dir\" ] && out=\"$out | $(basename \"$dir\")\"; [ -n \"$branch\" ] && out=\"$out ($branch)\"; [ -n \"$remaining\" ] && printf \"%s | ctx: %.0f%%\" \"$out\" \"$remaining\" || echo \"$out\""
-  }
+  },
+  "spinnerTipsEnabled": false
 }
