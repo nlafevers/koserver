@@ -272,7 +272,7 @@ Goal: fix confirmed KOPDS bugs and reduce unnecessary query work.
   - **Verify:** `cd kopds && GOCACHE=/tmp/kopds-gocache go test ./internal/api`
   - **Done when:** IDs are validated and tests pass
 
-- [ ] **UR2-6.3 Check row iteration errors**
+- [x] **UR2-6.3 Check row iteration errors** (Commit: 07d1a8a)
   - **Repos:** kopds
   - **Read:** none
   - **Edit:** kopds/internal/database/book_repository.go
