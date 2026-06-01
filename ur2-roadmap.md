@@ -172,7 +172,7 @@ Goal: make server startup, shutdown, logging, and shared middleware behavior eas
   - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./internal/config ./cmd/kosync`
   - **Done when:** tests pass; validation runs on startup
 
-- [ ] **UR2-4.3 Standardize request ID generation**
+- [x] **UR2-4.3 Standardize request ID generation** (Commits: kopds:7a6ca01, kosync:8a8c06d)
   - **Repos:** kopds, kosync
   - **Read:** none
   - **Edit:** kopds/internal/api/middleware.go, kosync/internal/api/middleware.go, kopds/internal/api/middleware_test.go, kosync/internal/api/middleware_test.go
