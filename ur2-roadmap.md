@@ -164,7 +164,7 @@ Goal: make server startup, shutdown, logging, and shared middleware behavior eas
   - **Verify:** `cd kosync && GOCACHE=/tmp/kosync-gocache go test ./cmd/kosync ./internal/api`
   - **Done when:** tests pass; main matches KOPDS structure
 
-- [ ] **UR2-4.2 Add KOSYNC config validation**
+- [x] **UR2-4.2 Add KOSYNC config validation** (Commit: 71e8c22)
   - **Repos:** kosync
   - **Read:** none
   - **Edit:** kosync/internal/config/config.go, kosync/cmd/kosync/main.go, kosync/internal/config/config_test.go
