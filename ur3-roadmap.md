@@ -55,7 +55,7 @@ Goal: remove KOPDS code that has no non-test callers, updating or deleting only 
   - **Verify:** `cd kopds && gofmt -l . && GOCACHE=/tmp/kopds-gocache go build ./... && GOCACHE=/tmp/kopds-gocache go test ./internal/database`
   - **Done when:** `NewStorage` is gone, both test sites build the struct literal, gofmt prints nothing, and tests pass
 
-- [ ] **UR3-1.3** Remove KOPDS `UserRepository.Save`
+- [x] **UR3-1.3** Remove KOPDS `UserRepository.Save` (Commit: 7c6c07f)
   - **Repos:** kopds
   - **Read:** kopds/internal/domain/interfaces.go, kopds/internal/database/user_repository.go, kopds/internal/database/user_repository_test.go
   - **Edit:** kopds/internal/domain/interfaces.go, kopds/internal/database/user_repository.go, kopds/internal/database/user_repository_test.go
