@@ -156,7 +156,7 @@ Acceptance criteria for Phase 3:
 
 Goal: make server startup, shutdown, logging, and shared middleware behavior easier to compare.
 
-- [ ] **UR2-4.1 Extract KOSYNC `runServer`**
+- [x] **UR2-4.1 Extract KOSYNC `runServer`** (Commit: 7c130ba)
   - **Repos:** kosync
   - **Read:** none
   - **Edit:** kosync/cmd/kosync/main.go
