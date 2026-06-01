@@ -114,7 +114,7 @@ Goal: remove KOSYNC code that has no non-test callers and collapse redundant ind
   - **Verify:** `cd kosync && gofmt -l . && GOCACHE=/tmp/kosync-gocache go build ./... && GOCACHE=/tmp/kosync-gocache go test ./...`
   - **Done when:** `models.User` is gone, `models.Progress` is unchanged, the module compiles, gofmt prints nothing, and tests pass
 
-- [ ] **UR3-2.3** Collapse KOSYNC `UpdateUserPassword` into `UpdatePassword`
+- [x] **UR3-2.3** Collapse KOSYNC `UpdateUserPassword` into `UpdatePassword` (Commit: 7506ebd)
   - **Repos:** kosync
   - **Read:** kosync/internal/database/sqlite.go, kosync/internal/database/sqlite_test.go
   - **Edit:** kosync/internal/database/sqlite.go
