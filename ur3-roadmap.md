@@ -39,7 +39,7 @@ Implement one incomplete step at a time, in order. Each step is self-contained: 
 
 Goal: remove KOPDS code that has no non-test callers, updating or deleting only the tests that exercise the removed symbols.
 
-- [ ] **UR3-1.1** Remove KOPDS dead `*Storage` user methods
+- [x] **UR3-1.1** Remove KOPDS dead `*Storage` user methods (Commit: 3a69665)
   - **Repos:** kopds
   - **Read:** kopds/internal/database/sqlite.go, kopds/internal/database/user_repository_test.go
   - **Edit:** kopds/internal/database/sqlite.go, kopds/internal/database/user_repository_test.go
