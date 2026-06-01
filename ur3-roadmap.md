@@ -71,7 +71,7 @@ Goal: remove KOPDS code that has no non-test callers, updating or deleting only 
   - **Verify:** `cd kopds && gofmt -l . && GOCACHE=/tmp/kopds-gocache go build ./... && GOCACHE=/tmp/kopds-gocache go test ./...`
   - **Done when:** `GetLinkGenerator` is gone, the package compiles, gofmt prints nothing, and tests pass
 
-- [ ] **UR3-1.5** Remove unused OPDS Atom symbols
+- [x] **UR3-1.5** Remove unused OPDS Atom symbols (Commit: d3191d7)
   - **Repos:** kopds
   - **Read:** kopds/internal/opds/atom.go, kopds/internal/opds/atom_test.go
   - **Edit:** kopds/internal/opds/atom.go
