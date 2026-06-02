@@ -41,9 +41,11 @@ Phases covered:
 
 See `ur2-roadmap.md` for the complete checklist, per-step instructions, and acceptance criteria.
 
-## Uniformity Round 3 — Audit Findings (June 2026)
+## Uniformity Round 3 — Completed
 
-Round 3 is a fresh third audit focused on the risk that two rounds of uniformity work left behind **uniform code that is never wired in** and **legacy code that was never removed**.  It is documentation-only: the findings below are recorded here and in `kopds/UNIFORMITY.md` and `kosync/UNIFORMITY.md`, but no code has been changed yet.  Each finding names the symbol, its location, and the recommended action.
+Round 3 addressed a fresh third audit focused on the risk that two rounds of uniformity work left behind **uniform code that is never wired in** and **legacy code that was never removed**.  The full implementation plan, with per-step commits, is in `ur3-roadmap.md`.  Every checklist item (UR3-1.1 through UR3-4.2) and every final-verification item (FINAL-3.1 through FINAL-3.3) is complete.
+
+The findings below were implemented in `ur3-roadmap.md`.  Each finding names the symbol, its location, and the recommended action.
 
 The audit cross-checked three lenses: per-repo dead-code tracing (every symbol's non-test callers), cross-repo uniformity drift, and security behavior.  The headline result is reassuring on two fronts and actionable on a third:
 
