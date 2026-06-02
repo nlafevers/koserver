@@ -204,7 +204,7 @@ Run only after all earlier phases are complete.
   - **Verify:** `cd kosync && gofmt -l . && GOCACHE=/tmp/kosync-gocache go vet ./... && GOCACHE=/tmp/kosync-gocache go test ./... && GOCACHE=/tmp/kosync-gocache go run golang.org/x/vuln/cmd/govulncheck@latest ./... && ./test/integration_test.sh`
   - **Done when:** all commands pass
 
-- [ ] **FINAL-3.3** Final root documentation verification
+- [x] **FINAL-3.3** Final root documentation verification
   - **Repos:** koserver
   - **Read:** none
   - **Edit:** none
