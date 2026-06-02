@@ -1,0 +1,73 @@
+# Combined KOPDS + KOSYNC + Caddy stack.
+#
+# Only Caddy publishes ports (80/443); the two app containers are reachable
+# *only* on the internal Docker network, so 8080/8081 are never exposed to the
+# internet. This is what makes KO*_TRUST_PROXY_HEADERS=true safe: the apps can
+# only ever be reached through Caddy, which sets a trustworthy X-Forwarded-For.
+#
+# Before launching: edit the Calibre library host path and the two KO*_BASE_URL
+# / hostname values, and update the hostnames in ./Caddyfile to match.
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - kopds
+      - kosync
+
+  kopds:
+    image: ghcr.io/nlafevers/kopds:latest
+    container_name: kopds
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      # Path to your Calibre library (keep this read-only)
+      - /path/to/your/calibre/library:/library:ro
+      # KOPDS index + cache — keep on local disk, never a network/rclone mount
+      - kopds_data:/data
+      - kopds_cache:/cache
+    environment:
+      - KOPDS_LIBRARY_PATH=/library
+      - KOPDS_DATABASE_PATH=/data/kopds.db
+      - KOPDS_IMAGE_CACHE_PATH=/cache/images
+      - KOPDS_BASE_URL=https://kopds.example.com # your real public URL
+      - KOPDS_PORT=8080
+      - KOPDS_LOG_LEVEL=info
+      - KOPDS_JSON_LOG=true
+      - KOPDS_TRUST_PROXY_HEADERS=true # safe: only reachable via Caddy
+
+  kosync:
+    image: ghcr.io/nlafevers/kosync:latest
+    container_name: kosync
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - kosync_data:/data
+    environment:
+      - KOSYNC_PORT=8081
+      - KOSYNC_DATABASE_PATH=/data/kosync.db
+      - KOSYNC_LOG_LEVEL=info
+      - KOSYNC_JSON_LOG=true
+      - KOSYNC_DISABLE_REGISTRATION=true
+      - KOSYNC_TRUST_PROXY_HEADERS=true # safe: only reachable via Caddy
+
+volumes:
+  kopds_data:
+  kopds_cache:
+  kosync_data:
+  caddy_data:
+  caddy_config:

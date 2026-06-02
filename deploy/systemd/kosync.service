@@ -1,0 +1,39 @@
+# /etc/systemd/system/kosync.service
+#
+# Runs the KOSYNC binary as a dedicated, unprivileged system user.
+# Adjust the paths and the Environment= lines to match your install, then:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now kosync
+
+[Unit]
+Description=KOSYNC KOReader Sync Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=kosync
+Group=kosync
+ExecStart=/opt/kosync/kosync
+Restart=on-failure
+RestartSec=5
+
+# Configuration. Use absolute paths so they do not depend on the working
+# directory. Alternatively, point at an EnvironmentFile=/etc/kosync/kosync.env.
+Environment=KOSYNC_DATABASE_PATH=/var/lib/kosync/kosync.db
+Environment=KOSYNC_PORT=8081
+Environment=KOSYNC_LOG_LEVEL=info
+Environment=KOSYNC_DISABLE_REGISTRATION=true
+Environment=KOSYNC_TRUST_PROXY_HEADERS=true
+
+# Hardening. ReadWritePaths must list the data directory: SQLite writes
+# -wal/-shm files *in that directory*, so a sandbox that makes it read-only
+# will silently break the database.
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/kosync
+
+[Install]
+WantedBy=multi-user.target

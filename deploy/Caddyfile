@@ -1,0 +1,23 @@
+# Caddyfile — reverse proxy + automatic HTTPS for KOPDS and KOSYNC.
+#
+# This file pairs with the combined docker-compose.yml in this directory, so the
+# upstream targets use the Docker *service names* (kopds:8080, kosync:8081).
+#
+# NATIVE (non-Docker) install: Caddy runs on the same host as the binaries, so
+# use localhost instead of the service names — see the commented lines below.
+#
+# Replace the two example hostnames with your real domains before using.
+# With real public DNS pointing here, Caddy obtains and renews Let's Encrypt
+# certificates automatically — no extra configuration required.
+
+kopds.example.com {
+	reverse_proxy kopds:8080
+	# Native install instead:
+	# reverse_proxy localhost:8080
+}
+
+kosync.example.com {
+	reverse_proxy kosync:8081
+	# Native install instead:
+	# reverse_proxy localhost:8081
+}

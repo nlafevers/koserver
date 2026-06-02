@@ -6,7 +6,9 @@ KOSERVER itself is not an application, but rather a repository for documentation
 Next steps for the development of KOPDS and KOSYNC are found here: @./todo.md
 
 ## Deployment
-There are no documents yet related to deployment.  This section will need to be updated as deployment documentation is developed.
+The deployment guide for running KOPDS and KOSYNC together — native (systemd) and Docker, behind a Caddy reverse proxy with automatic HTTPS, including a free-tier GCP VM walkthrough — is here: @./deployment-guide.md
+
+Copy-paste-ready sample configuration (Caddyfile, combined docker-compose, systemd units) lives in `./deploy/`. These deployment samples reference both app images/binaries, so they belong to the KOSERVER repository rather than either app's repository.
 
 ## Git
 Changes to documentation files in the KOSERVER project root must be committed to the KOSERVER repository.  Any changes to code or documentation of either KOPDS or KOSYNC must be committed to their own separate repositories.

@@ -1,0 +1,42 @@
+# /etc/systemd/system/kopds.service
+#
+# Runs the KOPDS binary as a dedicated, unprivileged system user.
+# Adjust the paths and the Environment= lines to match your install, then:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now kopds
+
+[Unit]
+Description=KOPDS OPDS Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=kopds
+Group=kopds
+ExecStart=/opt/kopds/kopds
+Restart=on-failure
+RestartSec=5
+
+# Configuration. Use absolute paths so they do not depend on the working
+# directory. Alternatively, point at an EnvironmentFile=/etc/kopds/kopds.env.
+Environment=KOPDS_LIBRARY_PATH=/srv/calibre/library
+Environment=KOPDS_DATABASE_PATH=/var/lib/kopds/kopds.db
+Environment=KOPDS_IMAGE_CACHE_PATH=/var/lib/kopds/cache/images
+Environment=KOPDS_BASE_URL=https://kopds.example.com
+Environment=KOPDS_PORT=8080
+Environment=KOPDS_LOG_LEVEL=info
+Environment=KOPDS_TRUST_PROXY_HEADERS=true
+
+# Hardening. ProtectSystem=full keeps /usr, /boot and /etc read-only while
+# leaving the Calibre library readable. ReadWritePaths must list the data
+# directory: SQLite writes -wal/-shm files *in that directory*, so a sandbox
+# that makes it read-only will silently break the database.
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/kopds
+
+[Install]
+WantedBy=multi-user.target
