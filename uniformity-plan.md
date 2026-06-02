@@ -21,7 +21,7 @@ Highlights of what was standardized:
 - Docker and compose deployment patterns
 - Unit and integration tests covering shared behavior
 
-The current inventory of identical functions and intentional project boundaries is maintained in `kopds/UNIFORMITY.md` and `kosync/UNIFORMITY.md` (kept identical).
+The current inventory of identical functions and intentional project boundaries is maintained in the [Current Uniformity Inventory](#current-uniformity-inventory) section of this file.
 
 ## Uniformity Round 2 — Completed
 
@@ -78,13 +78,76 @@ In both `internal/database/sqlite.go`, the `(*Storage).EnforceStorageCap` method
 
 ### 3.4 Drift corrections (inventory was over-claiming)
 
-Two entries currently listed under "Currently Identical Functions" in both `UNIFORMITY.md` files have actually diverged and must be corrected, not appended to:
+Two entries that had been listed under "Currently Identical Functions" in the uniformity inventory had actually diverged and were corrected:
 
-- **`openCLIStorage`** — KOPDS returns `(*sql.DB, domain.UserRepository)` and injects `NewUserRepository`; KOSYNC returns `(*sql.DB, *database.Storage)` and injects `NewStorage`.  Different return type, different injection, different open call (`NewSQLite` vs `OpenSQLite`).  This is the documented clean-architecture split (`UNIFORMITY.md` line 56 already concedes it) and is acceptable — but it must be moved out of the identical list into the intentional-boundaries section.
+- **`openCLIStorage`** — KOPDS returns `(*sql.DB, domain.UserRepository)` and injects `NewUserRepository`; KOSYNC returns `(*sql.DB, *database.Storage)` and injects `NewStorage`.  Different return type, different injection, different open call (`NewSQLite` vs `OpenSQLite`).  This is the documented clean-architecture split, moved from the identical list into the intentional-boundaries section.
 - **`UpdatePassword(username, passwordHash string) error`** — not the same live function in each app.  KOPDS's live update is `sqliteUserRepository.UpdatePassword` (context-based); the `Storage.UpdatePassword` listed here is the dead method slated for removal in 3.1.  KOSYNC's `Storage.UpdatePassword` is live but delegates to `UpdateUserPassword`.  Correct the entry once the dead KOPDS method is removed.
 
 ### 3.5 Recommended boundary additions
 
 After pruning, the only intentional cross-app divergence in user management is the storage abstraction itself: **KOPDS owns a `domain.UserRepository` (clean-architecture interface, context-based); KOSYNC owns flat `*Storage` methods.**  This is correct per the roadmap's "do not force domain-specific code into artificial sameness" rule and should be documented as a boundary rather than chased into sameness.  Do **not** rip out the KOPDS repository to match KOSYNC; the minimal correct prune is deleting the unused mirror methods listed in 3.1.
 
-The detailed per-symbol inventory and the corrected uniformity claims live in `kopds/UNIFORMITY.md` and `kosync/UNIFORMITY.md` (kept byte-identical).
+The corrected per-symbol inventory and boundaries are maintained in the [Current Uniformity Inventory](#current-uniformity-inventory) section of this file.
+
+---
+
+## Current Uniformity Inventory
+
+This section is the single source of truth for which functions are identical across KOPDS and KOSYNC, which differences are intentional boundaries, and the implementation details that make them so.  Update this section whenever a cross-project change is made.
+
+### Currently Identical Functions
+
+- `runCLI`
+- `printUsage`
+- `passwordFromArgs`
+- `readPasswordInteractively`
+- `HashPassword`
+- `CheckPassword`
+- `logger.New`
+- `logger.NewCLI`
+- `OpenSQLite`
+- `Migrate`
+- `EnforceStorageCap`
+- `vacuum`
+- `resolveExecutablePaths`
+- `resolvePath`
+- `generateRequestID`
+- `IPRateLimiter`
+- `NewIPRateLimiter`
+- `GetLimiter`
+- `clientIP`
+- `RateLimitMiddleware`
+- HTTP Routing (native `net/http.ServeMux`)
+
+### Currently Identical Config Fields
+
+- `RateLimitEnabled`
+- `RateLimitPerMinute`
+- `RateLimitBurst`
+- `TrustProxyHeaders`
+
+### Intentional Project Boundaries
+
+- KOPDS owns OPDS catalog, Calibre scanner, image cache, book repository, and link-generation behavior.
+- KOSYNC owns KOReader sync protocol handlers, progress storage, registration, and header authentication behavior.
+- Database schemas may differ when the stored domain differs, but shared lifecycle helpers must remain identical.
+- **User-storage abstraction differs by design:** KOPDS owns a `domain.UserRepository` (clean-architecture interface, context-based, `sqliteUserRepository`); KOSYNC owns flat `*Storage` user methods.  This is a documented boundary, not drift — do not force one app onto the other's shape.
+- **`openCLIStorage` differs** as a consequence of the boundary above: KOPDS returns `(*sql.DB, domain.UserRepository)` and injects `NewUserRepository`; KOSYNC returns `(*sql.DB, *database.Storage)` and injects `NewStorage`.  The surrounding CLI flow (`runCLI`, `printUsage`, password helpers) stays identical.
+- **KOSYNC owns `NewStorage`:** its `Storage` is the primary storage object; KOPDS builds `&Storage{...}` inline as a thin storage-cap adapter and has no `NewStorage`.  Do not re-add `NewStorage` to KOPDS for the sake of symmetry.
+- Both apps open SQLite via `OpenSQLite` directly.  There is no `NewSQLite` wrapper in either app.
+- **`UpdatePassword` is intentionally NOT cross-identical:** KOPDS's live update is `sqliteUserRepository.UpdatePassword` (context-based, clean-architecture interface); KOSYNC's is `(*Storage).UpdatePassword`.  This follows the standing rule "do not force domain-specific code into artificial sameness."
+
+### Implementation Notes
+
+- `pruneStorageCapRecords` intentionally differs: KOPDS prunes catalog sync-state rows; KOSYNC prunes progress rows.
+- `config.Load` intentionally differs because each project has different domain settings; shared path-resolution helpers remain identical.
+- KOPDS has a repository-level `EnforceStorageCap` adapter to satisfy the book-repository interface; KOSYNC calls storage directly.
+- `EnforceStorageCap` returns early if `capMB <= 0` at the top of the method, before any file I/O.  Both apps share this guard.
+- The storage-cap file is stat-ed exactly once per `EnforceStorageCap` invocation; the package-level `enforceStorageCap` free function is the test seam and its signature must remain stable.
+- Database lifecycle is `OpenSQLite` → `Migrate` → inject (`NewBookRepository` / `NewUserRepository` on KOPDS; `NewStorage` on KOSYNC).  There is no `InitDB` helper and no `NewSQLite` wrapper.
+- `generateRequestID` allocates 16 bytes via `crypto/rand.Read`, encodes as hex, and falls back to a timestamp-based ID on failure.  Identical in both apps.
+- `PRAGMA foreign_keys=ON` is set during SQLite connection init alongside WAL mode in both apps.
+- Rate-limit helpers (`IPRateLimiter`, `NewIPRateLimiter`, `GetLimiter`, `clientIP`, `RateLimitMiddleware`) are copy-paste identical.  Config fields `RateLimitEnabled`, `RateLimitPerMinute`, `RateLimitBurst`, and `TrustProxyHeaders` use the same names and defaults.
+- Both `create-user` CLI commands fail if the user already exists to prevent accidental overwrites; use `change-password` to update credentials.
+- `logger.New` writes to `io.MultiWriter(os.Stderr, file)` when a log path is configured (server mode).  `logger.NewCLI` writes to the log file only, or `io.Discard` when no path is set (CLI mode), keeping terminal output clean.
+- Similarity matches involving unrelated `Close` methods are false positives and are not uniformity targets.
