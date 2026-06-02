@@ -196,7 +196,7 @@ Run only after all earlier phases are complete.
   - **Verify:** `cd kopds && gofmt -l . && GOCACHE=/tmp/kopds-gocache go vet ./... && GOCACHE=/tmp/kopds-gocache go test ./... && GOCACHE=/tmp/kopds-gocache go run golang.org/x/vuln/cmd/govulncheck@latest ./... && ./test/integration_test.sh`
   - **Done when:** all commands pass
 
-- [ ] **FINAL-3.2** Final KOSYNC verification
+- [x] **FINAL-3.2** Final KOSYNC verification
   - **Repos:** kosync
   - **Read:** none
   - **Edit:** none
