@@ -145,7 +145,7 @@ GOCACHE=/tmp/kosync-gocache go test ./...
   - **Verify:** `cd /home/nathan/koserver/kopds && gofmt -l internal/logger/ && GOCACHE=/tmp/kopds-gocache go build ./... && GOCACHE=/tmp/kopds-gocache go test ./internal/logger/... && cd ../kosync && gofmt -l internal/logger/ && GOCACHE=/tmp/kosync-gocache go build ./... && GOCACHE=/tmp/kosync-gocache go test ./internal/logger/...`
   - **Done when:** `NewCLI` is present and identical in both logger packages, `logger_test.go` exists and all three subtests pass in both apps, gofmt prints nothing, and builds pass; one commit per repo
 
-- [ ] **TDL-003** Wire `logger.NewCLI` into CLI mode in both apps
+- [x] **TDL-003** Wire `logger.NewCLI` into CLI mode in both apps (Commits: kopds:27f63e3, kosync:1facdad)
   - **Repos:** kopds, kosync
   - **Read:** kopds/cmd/kopds/main.go, kosync/cmd/kosync/main.go
   - **Edit:** kopds/cmd/kopds/main.go, kosync/cmd/kosync/main.go
