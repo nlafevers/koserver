@@ -31,7 +31,7 @@ GOCACHE=/tmp/kosync-gocache go test ./...
 
 **Fix:** Add `logger.NewCLI()` — identical level parsing and handler construction as `New`, but writes to the log file only (or `io.Discard` when no path is set). Switch `main()` in each app to call `NewCLI` before `runCLI` and `New` before `runServer`.
 
-- [ ] **TDL-002** Add `logger.NewCLI` to both apps
+- [x] **TDL-002** Add `logger.NewCLI` to both apps (Commits: kopds:c77830e, kosync:d03a9ad)
   - **Repos:** kopds, kosync
   - **Read:** kopds/internal/logger/logger.go, kosync/internal/logger/logger.go
   - **Edit:** kopds/internal/logger/logger.go, kopds/internal/logger/logger_test.go, kosync/internal/logger/logger.go, kosync/internal/logger/logger_test.go
