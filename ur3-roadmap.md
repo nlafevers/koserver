@@ -188,7 +188,7 @@ Acceptance criteria for Phase 4:
 
 Run only after all earlier phases are complete.
 
-- [ ] **FINAL-3.1** Final KOPDS verification
+- [x] **FINAL-3.1** Final KOPDS verification
   - **Repos:** kopds
   - **Read:** none
   - **Edit:** none
