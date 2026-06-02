@@ -361,6 +361,12 @@ docker exec -it kopds  ./kopds  create-user admin
 docker exec -it kosync ./kosync create-user admin
 ```
 
+> **CLI logging in Docker:** `docker exec` runs as a separate process — its output goes to your
+> terminal, not to `docker logs`. CLI user-management commands will not appear in `docker logs`
+> regardless of log settings. If you need a persistent record of these operations, add
+> `KOPDS_LOG_PATH=/data/kopds.log` and `KOSYNC_LOG_PATH=/app/data/kosync.log` to the environment
+> sections of docker-compose.yml; both data directories are already mounted volumes.
+
 DNS and certificates work exactly as in [Part B](#b4-point-dns-and-confirm-https): point your A
 records at the host, and Caddy handles HTTPS on first request.
 
