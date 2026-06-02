@@ -172,7 +172,7 @@ Goal: update the uniformity inventories and the round plan to reflect the comple
   - **Verify:** `diff kopds/UNIFORMITY.md kosync/UNIFORMITY.md && echo IDENTICAL`
   - **Done when:** `NewSQLite`/`NewStorage` are removed from the identical list, the new boundaries and Round 3 summary are present, `diff` reports the files identical, and the command prints `IDENTICAL`; one commit per repo
 
-- [-] **UR3-4.2** Mark Round 3 complete in the root plan
+- [x] **UR3-4.2** Mark Round 3 complete in the root plan (Commit: db610db)
   - **Repos:** koserver
   - **Read:** uniformity-plan.md, ur3-roadmap.md
   - **Edit:** uniformity-plan.md
