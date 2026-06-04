@@ -351,11 +351,9 @@ type=pd-standard \
  --reservation-affinity=any
 ```
 
-Use a free-tier-eligible region, a Debian or Ubuntu image, and a standard persistent disk within the free allowance (<=30 GB). SSH in from the Console or `gcloud compute ssh <vm-name>`.
-
 ### D3. Firewall & static IP
 
-- **Static IP (not free):** reserve and assign a static external IP so your DNS records stay valid across reboots (Console: VPC network → IP addresses → Reserve; or `gcloud compute addresses create`).  **A static IP is not included in the free-tier.**
+- **Static IP (not free):** reserve and assign a static external IP so your DNS records stay valid across reboots (Console: VPC network → IP addresses → Reserve; or `gcloud compute addresses create`).  **A static IP is not included in the free-tier.**  You can use a dynamic IP, but you will have to update your DNS records every time you reboot the VM.
 - **Firewall:** GCP inbound is **default-deny**. Add a rule allowing **only** TCP `80`, `443` (and `22` for SSH, usually already allowed). **Do not** open `8080`/`8081` — that is precisely the boundary from [Why the app ports stay private](#why-the-app-ports-stay-private).
 
 ```bash
@@ -370,6 +368,8 @@ gcloud compute firewall-rules create allow-http-https \
 
 ### D4. Add swap (mandatory on 1 GB)
 
+SSH in to your VM from the Console or `gcloud compute ssh <vm-name>`.
+
 ```bash
 sudo fallocate -l 2G /swapfile
 sudo chmod 600 /swapfile
@@ -381,7 +381,7 @@ This prevents Out-of-Memory crashes during KOPDS's initial library scan.
 
 ### D5. DNS
 
-Point your `kopds.*` and `kosync.*` A records at the VM's static IP. With a public IP and ports 80/443 open, Caddy's automatic HTTPS just works — no DuckDNS workaround needed here.
+Point your `kopds.*` and `kosync.*` A records at the VM's IP. With a public IP and ports 80/443 open, Caddy's automatic HTTPS just works — no DuckDNS workaround needed here.
 
 ### D6. Install the apps
 
