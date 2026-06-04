@@ -34,11 +34,11 @@ Copy-paste-ready versions of every config file in this guide live in [`deploy/`]
 ### What you are building
 
 ```
-                              ┌─────────────────────────────────────┐
-   KOReader devices           │            Your server              │
-   (phone, e-reader) ──HTTPS──┼──▶ Caddy ──┬──▶ KOPDS  (127.0.0.1:8080) ──▶ Calibre library
-                       :443   │  :80 :443  └──▶ KOSYNC (127.0.0.1:8081) ──▶ kosync.db
-                              └─────────────────────────────────────┘
+                           ┌───────────────────────────────────────────────────────┐
+KOReader devices           │            Your server                                │
+(phone, e-reader) ──HTTPS──┼──▶ Caddy ──┬──▶ KOPDS  (127.0.0.1:8080) ──▶ kopds.db ─┼─▶ Calibre library
+                    :443   │  :80 :443  └──▶ KOSYNC (127.0.0.1:8081) ──▶ kosync.db │
+                           └───────────────────────────────────────────────────────┘
         only 80/443 are open to the internet; 8080/8081 stay private
 ```
 
@@ -52,11 +52,11 @@ Copy-paste-ready versions of every config file in this guide live in [`deploy/`]
 
 ### Choose your path
 
-| You want… | Follow |
-| :--- | :--- |
+| You want…                                                    | Follow |
+| :---                                                         | :---   |
 | The leanest setup for constrained hardware (**recommended**) | [Part A — Native](#-part-a--native-install-recommended) → [Part B — Caddy](#-part-b--caddy-reverse-proxy--https) |
-| The most self-contained, hands-off setup | [Part C — Docker](#-part-c--docker-alternative) |
-| To run it on a free cloud VM | [Part D — GCP](#-part-d--cloud-free-tier-gcp-vm) (then A or C) |
+| The most self-contained, hands-off setup                     | [Part C — Docker](#-part-c--docker-alternative) |
+| To run it on a free cloud VM                                 | [Part D — GCP](#-part-d--cloud-free-tier-gcp-vm) (then A or C) |
 
 **Why native is the default recommendation.** Docker adds ~250–300 MB of resident overhead. On a
 1 GB cloud VM or an early Raspberry Pi that is a large fraction of your RAM. The native binaries
