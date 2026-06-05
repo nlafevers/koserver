@@ -33,7 +33,10 @@ Group=kopds
 # (which has no guaranteed home directory) can always find it.
 Environment=RCLONE_CONFIG=/var/lib/kopds/rclone.conf
 
-# Create the mount point on first run (idempotent).
+# Defensively unmount any stale FUSE mount left by a previous crash, then
+# ensure the mount point directory exists. The leading '-' tells systemd to
+# ignore a non-zero exit from fusermount3 (normal when nothing is mounted).
+ExecStartPre=-/bin/fusermount3 -u /srv/calibre/library
 ExecStartPre=/bin/mkdir -p /srv/calibre/library
 
 # Replace mystorage:calibre with your configured rclone remote and path.
