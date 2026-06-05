@@ -428,7 +428,7 @@ The timer runs the sync 5 minutes after every boot and every 6 hours thereafter 
 
 #### Option 2: Live FUSE mount
 
-`rclone mount` keeps books current without local disk space for book files, but requires FUSE to be accessible to a non-root system user. FUSE availability and permission setup vary by distribution and security configuration (kernel version, SELinux, AppArmor, etc.). See the [rclone mount documentation](https://rclone.org/commands/rclone_mount/) for your system before proceeding (or check the Troubleshooting section).
+`rclone mount` keeps books current without local disk space for book files, but requires FUSE to be accessible to a non-root system user. FUSE availability and permission setup vary by distribution and security configuration (kernel version, SELinux, AppArmor, etc.). See the [rclone mount documentation](https://rclone.org/commands/rclone_mount/) for your system before proceeding.
 
 Once FUSE is working for the `kopds` user, install the sample unit from [`deploy/systemd/kopds-library.service`](deploy/systemd/kopds-library.service):
 
@@ -570,31 +570,5 @@ Full client walkthroughs are in each app's README under **Usage with KOReader**.
 **KOReader "Network Error" or 406.** Confirm the public URL is correct and HTTPS is valid. KOSYNC is strict about the `Accept: application/vnd.koreader.v1+json` header the client sends — a misconfigured proxy that rewrites headers can break it.
 
 **Out-of-memory on a small VM.** Add swap ([D4](#d4-add-swap-mandatory-on-1-gb)) and lower load during the first KOPDS scan with rclone `--bwlimit`.
-
-**Rclone fusermount error.** If you see `mount helper error: fusermount3: mount failed: Permission denied` when trying to use `rclone mount` it is probably AppArmor blocking your mount point.  Confirm by checking `sudo dmesg | grep -i apparmor`.  Fix this by following the steps at [rclone mount documentation](https://rclone.org/commands/rclone_mount/), which will show you how to disable AppArmor.  Alternatively, enable your specific mount point:
-
-```bash
-sudo nano /etc/apparmor.d/fusermount3
-```
-
-Look for the lines regulating mount locations. They typically look like this:
-
-```
-mount fstype=fuse.* options=(rw, nosuid, nodev) -> /mnt/**,
-mount fstype=fuse.* options=(rw, nosuid, nodev) -> /media/**,
-```
-
-Add the following new line below them, include the trailing comma:
-
-```
-mount fstype=fuse.* options=(ro, nosuid, nodev) -> /srv/calibre/library/,
-```
-
-Save the changes in the editor and reload AppArmor:
-
-```bash
-sudo systemctl reload apparmor
-```
-
 
 For deeper diagnosis, set `KO*_LOG_LEVEL=debug` and watch `journalctl -u <app> -f`. Each app's README has an app-specific troubleshooting section.
