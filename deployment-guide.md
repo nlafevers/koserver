@@ -408,6 +408,11 @@ The sample unit is in [`deploy/systemd/kopds-library.service`](deploy/systemd/ko
 # data directory so the system account can always find it.
 sudo -u kopds env RCLONE_CONFIG=/var/lib/kopds/rclone.conf rclone config
 
+# Grant the kopds user FUSE access.
+# /dev/fuse is owned by the fuse group on most systems; without this
+# fusermount will exit with "Permission denied" even as a named user.
+sudo usermod -aG fuse kopds
+
 # Create the mount point owned by the kopds user.
 # Running the mount as kopds means --allow-other is not needed.
 sudo mkdir -p /srv/calibre/library
