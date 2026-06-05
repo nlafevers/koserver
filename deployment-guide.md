@@ -445,14 +445,66 @@ UFW's default is to deny other inbound traffic, so 8080/8081 are not reachable f
 
 ### Backups
 
-Both apps store everything in a single SQLite file, so backups are a file copy — but use SQLite's `.backup` so you never copy a half-written database:
+Both apps store everything in a single SQLite file. **KOSYNC progress is irreplaceable** — always back it up. The KOPDS index is rebuildable from your Calibre library, so backing it up is optional; back up the Calibre library itself instead.
+
+Use SQLite's `.backup` command rather than a plain file copy — it produces a clean snapshot even while the server is writing.
+
+#### 1. Create the backup directory
 
 ```bash
-# KOSYNC progress is irreplaceable — back it up:
-sqlite3 /var/lib/kosync/kosync.db ".backup '/var/backups/kosync-$(date +%F).db'"
+sudo mkdir -p /var/backups/kosync
+sudo chmod 700 /var/backups/kosync
 ```
 
-Put that in a daily `cron` job and copy the result off the machine. The **KOPDS** index is rebuildable from your Calibre library, so backing it up is optional; back up the Calibre library itself instead.
+#### 2. Write a backup script
+
+```bash
+sudo tee /usr/local/bin/backup-kosync.sh > /dev/null << 'SCRIPT'
+#!/bin/bash
+# Daily KOSYNC SQLite backup. Retains 30 days of snapshots.
+set -euo pipefail
+
+BACKUP_DIR=/var/backups/kosync
+DB=/var/lib/kosync/kosync.db
+DEST="$BACKUP_DIR/kosync-$(date +%F).db"
+
+sqlite3 "$DB" ".backup '$DEST'"
+chmod 600 "$DEST"
+
+# Prune snapshots older than 30 days.
+find "$BACKUP_DIR" -name 'kosync-*.db' -mtime +30 -delete
+SCRIPT
+sudo chmod 755 /usr/local/bin/backup-kosync.sh
+```
+
+#### 3. Test the script before scheduling it
+
+```bash
+sudo /usr/local/bin/backup-kosync.sh
+ls -lh /var/backups/kosync/
+```
+
+You should see a dated `.db` file roughly the same size as `/var/lib/kosync/kosync.db`. If `sqlite3` is not installed, run `sudo apt install sqlite3`.
+
+#### 4. Schedule a daily cron job
+
+```bash
+sudo tee /etc/cron.d/kosync-backup > /dev/null << 'CRON'
+# Daily KOSYNC backup at 03:00 local time.
+0 3 * * * root /usr/local/bin/backup-kosync.sh >> /var/log/kosync-backup.log 2>&1
+CRON
+```
+
+Check `/var/log/kosync-backup.log` the next morning to confirm the job ran cleanly.
+
+#### 5. Copy backups off the machine
+
+A backup that lives only on the same disk it protects is not a backup. Transfer the files to durable off-site storage after each run. rclone works well here — add these lines to `/usr/local/bin/backup-kosync.sh` **before** the `find … -delete` pruning step so local copies are only removed after a successful remote transfer:
+
+```bash
+# Copy today's snapshot to a remote (adjust the destination as needed).
+rclone copy "$DEST" mystorage:backups/kosync/
+```
 
 ### Updates
 
