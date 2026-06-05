@@ -655,7 +655,7 @@ Both apps log to the systemd journal by default. Common commands:
 ```bash
 journalctl -u kopds -f                  # follow in real time (Ctrl-C to stop)
 journalctl -u kopds --since "1h ago"    # last hour only
-journalctl -u kopds -p warn             # warnings and errors only
+journalctl -u kopds -p warning          # warnings and errors only
 journalctl -u kopds -u kosync           # both apps interleaved
 ```
 
