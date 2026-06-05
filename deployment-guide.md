@@ -106,7 +106,9 @@ The apps themselves enforce strict permissions on the database (directory `0750`
 
 ### A3. Configure
 
-Both apps read their settings from environment variables (or a `config.yaml`). The full list lives in each app's README ([KOPDS](https://github.com/nlafevers/kopds#-configuration-reference), [KOSYNC](https://github.com/nlafevers/kosync#-configuration-reference)). For a reverse-proxied deployment the settings that matter most are:
+Both apps read their settings from environment variables. The full list lives in each app's README ([KOPDS](https://github.com/nlafevers/kopds#-configuration-reference), [KOSYNC](https://github.com/nlafevers/kosync#-configuration-reference)). For a reverse-proxied deployment the settings that matter most are:
+
+> **Use environment variables for native installs, not `config.yaml`.** Both apps also support a `config.yaml` file, but they only search the working directory at startup — which is `/` under systemd and wherever your shell is for CLI commands. Neither is a predictable place for a config file. Set everything in the `Environment=` lines of your systemd unit as shown in step A5.
 
 - `KOPDS_BASE_URL` / **public HTTPS URL** — KOPDS builds absolute links into its OPDS feeds from this, so it **must** be the public address (e.g. `https://kopds.example.com`), not `localhost`.
 - `KO*_TRUST_PROXY_HEADERS=true` — tells the app to read the real client IP from the `X-Forwarded-For` header that Caddy sets (used for rate limiting). Only safe behind a proxy; see [the security note](#why-the-app-ports-stay-private).
