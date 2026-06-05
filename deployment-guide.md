@@ -409,8 +409,10 @@ The sample unit is in [`deploy/systemd/kopds-library.service`](deploy/systemd/ko
 sudo -u kopds env RCLONE_CONFIG=/var/lib/kopds/rclone.conf rclone config
 
 # Grant the kopds user FUSE access.
-# /dev/fuse is owned by the fuse group on most systems; without this
-# fusermount will exit with "Permission denied" even as a named user.
+# fuse3 provides fusermount3 (setuid-root, fuse-group-executable) and
+# creates the fuse group. Without it the group won't exist and the
+# mount will fail with "Permission denied".
+sudo apt install -y fuse3
 sudo usermod -aG fuse kopds
 
 # Create the mount point owned by the kopds user.
