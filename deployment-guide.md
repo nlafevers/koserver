@@ -393,7 +393,8 @@ Your books aren't on the VM, so mount them with rclone (Go-native, handles netwo
 
 ```bash
 rclone mount mystorage:calibre /srv/calibre/library \
-  --read-only --allow-other --vfs-cache-mode minimal --bwlimit 8M --daemon
+  --read-only --allow-other --vfs-cache-mode minimal \
+  --cache-dir /var/lib/kopds/rclone-cache --bwlimit 8M --daemon
 ```
 
 > **FUSE permissions (important):** if you create the mount as `root` but KOPDS runs as the `kopds` user, `kopds` cannot traverse the mount unless you pass `--allow-other` **and** uncomment `user_allow_other` in `/etc/fuse.conf`. Otherwise KOPDS gets "permission denied" reading the library. (Alternatively, run the mount as the same `kopds` user, in which case `--allow-other` isn't needed.)

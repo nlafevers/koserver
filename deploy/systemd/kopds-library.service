@@ -44,6 +44,7 @@ ExecStartPre=/bin/mkdir -p /srv/calibre/library
 ExecStart=/usr/bin/rclone mount mystorage:calibre /srv/calibre/library \
     --read-only \
     --vfs-cache-mode minimal \
+    --cache-dir /var/lib/kopds/rclone-cache \
     --bwlimit 8M
 
 Restart=on-failure
