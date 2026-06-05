@@ -128,6 +128,8 @@ The CLI prompts for a password (hidden), creates and migrates the database on fi
 
 > Set the same `*_DATABASE_PATH` here that the service uses, so the CLI and the server share one database file.
 
+> **CLI log entries won't appear in the log file unless you pass `*_LOG_PATH` explicitly.** The CLI uses a file-only logger — structured entries go to the log file when a path is given, or are silently discarded when it is not. The terminal always shows the one-line human-readable result regardless. If you want an audit trail of user-management operations, add `KOPDS_LOG_PATH=/var/log/kopds/kopds.log` (and the equivalent for KOSYNC) to the `env` line above.
+
 ### A5. Install the systemd services
 
 Copy the sample units from [`deploy/systemd/`](deploy/systemd/) to `/etc/systemd/system/`, editing the paths, hostnames, and `KOPDS_LIBRARY_PATH` to match your machine. The KOPDS unit:
