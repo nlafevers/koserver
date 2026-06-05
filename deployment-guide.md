@@ -538,11 +538,219 @@ rclone copy "$DEST" mystorage:backups/kosync/
 
 ### Rate limiting & fail2ban
 
-Both apps rate-limit by client IP out of the box (`KO*_RATE_LIMIT_*`), which works correctly because `TRUST_PROXY_HEADERS=true` gives them the real IP from Caddy. For an extra layer, Caddy can rate-limit at the edge, and [`fail2ban`](https://github.com/fail2ban/fail2ban) can ban IPs that rack up 401s in your logs.
+Both apps rate-limit by client IP out of the box. The built-in limiter is configured with environment variables in your systemd unit (see each app's README for the full list under `KO*_RATE_LIMIT_*`). Because `TRUST_PROXY_HEADERS=true` is set, the apps see the real client IP from Caddy's `X-Forwarded-For` header — the rate limiter works correctly even behind a proxy.
+
+For an extra layer, install **fail2ban**. It watches your logs and temporarily blocks at the firewall level any IP address that triggers too many 401 Unauthorized responses, stopping brute-force attempts before they burn through your rate-limit budget.
+
+#### Install fail2ban
+
+```bash
+sudo apt install -y fail2ban
+sudo systemctl enable --now fail2ban
+```
+
+fail2ban reads its configuration from `/etc/fail2ban/`. The package creates a default `fail2ban.service` that starts automatically.
+
+#### Create filters
+
+A *filter* defines what a failed login attempt looks like in your logs. Both apps log a `status_code=401` field on every rejected request. Create one filter file per app:
+
+`/etc/fail2ban/filter.d/kopds.conf`:
+
+```ini
+[Definition]
+# Matches lines from the KOPDS HTTP middleware where a request was rejected
+# with 401 Unauthorized. <HOST> is a fail2ban placeholder that matches any
+# IPv4 or IPv6 address.
+failregex = status_code=401\b.*\bip=<HOST>
+            ip=<HOST>.*\bstatus_code=401\b
+ignoreregex =
+```
+
+`/etc/fail2ban/filter.d/kosync.conf`:
+
+```ini
+[Definition]
+failregex = status_code=401\b.*\bip=<HOST>
+            ip=<HOST>.*\bstatus_code=401\b
+ignoreregex =
+```
+
+> **Verify the IP field name first.** Run `journalctl -u kopds | grep status_code=401 | tail -3` and look at the end of the line for the IP address field — it may be `ip=`, `addr=`, or `remote_addr=` depending on the app version. Adjust `failregex` if the field name differs.
+
+#### Create jails
+
+A *jail* pairs a filter with the parameters that control when and how to ban. Create `/etc/fail2ban/jail.d/koserver.conf`:
+
+```ini
+[kopds]
+enabled      = true
+filter       = kopds
+backend      = systemd
+journalmatch = _SYSTEMD_UNIT=kopds.service
+maxretry     = 10
+findtime     = 10m
+bantime      = 1h
+action       = iptables-allports[name=kopds]
+
+[kosync]
+enabled      = true
+filter       = kosync
+backend      = systemd
+journalmatch = _SYSTEMD_UNIT=kosync.service
+maxretry     = 10
+findtime     = 10m
+bantime      = 1h
+action       = iptables-allports[name=kosync]
+```
+
+What the parameters mean:
+
+| Parameter | Value | Meaning |
+| :--- | :--- | :--- |
+| `backend` | `systemd` | Read from the systemd journal, not a log file |
+| `journalmatch` | `_SYSTEMD_UNIT=…` | Only look at entries from this specific service |
+| `maxretry` | `10` | Ban after 10 failures |
+| `findtime` | `10m` | Count failures within a 10-minute window |
+| `bantime` | `1h` | Keep the IP blocked for 1 hour (use `-1` for permanent) |
+| `action` | `iptables-allports` | Block all ports from the banned IP, not just 8080/8081 |
+
+#### Enable and verify
+
+Restart fail2ban to load the new jails:
+
+```bash
+sudo systemctl restart fail2ban
+sudo systemctl status fail2ban      # should show "active (running)"
+sudo fail2ban-client status         # lists all active jails
+sudo fail2ban-client status kopds   # shows banned IPs and failure count for kopds
+```
+
+#### Test your filter (recommended)
+
+Before relying on fail2ban in production, confirm the filter matches your actual log format:
+
+```bash
+sudo fail2ban-regex systemd-journal /etc/fail2ban/filter.d/kopds.conf \
+    --journalmatch '_SYSTEMD_UNIT=kopds.service'
+```
+
+The output shows how many log lines matched. If it shows zero but you have 401 entries in the journal, re-check the IP field name (see the tip above) and adjust `failregex`.
+
+#### Unban an IP
+
+If you accidentally lock yourself out during testing, unban manually:
+
+```bash
+sudo fail2ban-client set kopds unbanip 1.2.3.4
+sudo fail2ban-client set kosync unbanip 1.2.3.4
+```
 
 ### Logs
 
-By default each service logs to the journal — `journalctl -u kopds` / `-u kosync`. Set `KO*_JSON_LOG=true` if you ship logs to Loki/ELK. If you set `KO*_LOG_PATH` to a file, add a `logrotate` rule so it doesn't grow unbounded; otherwise rely on the journal, which rotates itself.
+#### Viewing logs
+
+Both apps log to the systemd journal by default. Common commands:
+
+```bash
+journalctl -u kopds -f                  # follow in real time (Ctrl-C to stop)
+journalctl -u kopds --since "1h ago"    # last hour only
+journalctl -u kopds -p warn             # warnings and errors only
+journalctl -u kopds -u kosync           # both apps interleaved
+```
+
+The journal rotates and enforces size limits automatically (typically 4 GB or 10 % of disk). You do not need logrotate when using the journal.
+
+#### Logging to a file (optional)
+
+If you prefer log files — for example to tail them directly or ship them to a remote aggregator — set a log path in your systemd unit:
+
+```bash
+sudo nano /etc/systemd/system/kopds.service
+```
+
+Add these two environment lines to the `[Service]` section:
+
+```ini
+Environment=KOPDS_LOG_PATH=/var/log/kopds/kopds.log
+Environment=KOPDS_JSON_LOG=true    # optional: structured JSON instead of text
+```
+
+Do the same for KOSYNC (`KOSYNC_LOG_PATH=/var/log/kosync/kosync.log`).
+
+Also add the log directory to `ReadWritePaths=` — the systemd hardening directives make most of the filesystem read-only, so the service cannot create files anywhere not explicitly listed:
+
+```ini
+ReadWritePaths=/var/lib/kopds /var/log/kopds
+```
+
+Create the directories and set ownership before starting the service:
+
+```bash
+sudo mkdir -p /var/log/kopds /var/log/kosync
+sudo chown kopds:kopds /var/log/kopds
+sudo chown kosync:kosync /var/log/kosync
+sudo systemctl daemon-reload && sudo systemctl restart kopds kosync
+```
+
+#### Adding a logrotate rule
+
+Without rotation, log files grow without bound. Create a logrotate config for each app.
+
+`/etc/logrotate.d/kopds`:
+
+```
+/var/log/kopds/kopds.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}
+```
+
+`/etc/logrotate.d/kosync`:
+
+```
+/var/log/kosync/kosync.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}
+```
+
+What the directives mean:
+
+| Directive | Meaning |
+| :--- | :--- |
+| `daily` | Rotate once per day |
+| `rotate 14` | Keep 14 days of old logs, then delete |
+| `compress` | Gzip rotated files to save disk space |
+| `delaycompress` | Skip compressing the most recent rotated file (the app may still have it open briefly) |
+| `missingok` | Do not error if the log file does not exist yet |
+| `notifempty` | Skip rotation if the file is empty |
+| `copytruncate` | Copy the log to a new file, then truncate the original to zero. This works without any special signal-handling in the app — the running process keeps its file handle open and writes continue uninterrupted |
+
+Test the config without actually rotating anything:
+
+```bash
+sudo logrotate --debug /etc/logrotate.d/kopds
+```
+
+Force a rotation to confirm everything works end-to-end:
+
+```bash
+sudo logrotate --force /etc/logrotate.d/kopds
+ls -lh /var/log/kopds/
+```
+
+You should see the original log renamed and compressed alongside a fresh `kopds.log`.
 
 ---
 
