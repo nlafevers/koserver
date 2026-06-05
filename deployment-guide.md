@@ -400,6 +400,33 @@ rclone mount mystorage:calibre /srv/calibre/library \
 
 For a permanent setup, wrap this in its own systemd service (ordered `Before=kopds.service`) so the mount is ready before KOPDS starts. Throttle with `--bwlimit` during the first scan so the metadata sync doesn't saturate a small VM's network or memory.
 
+The sample unit is in [`deploy/systemd/kopds-library.service`](deploy/systemd/kopds-library.service). Configure rclone, install the unit, and enable it:
+
+```bash
+# Configure rclone as the kopds user — stores the config inside the kopds
+# data directory so the system account can always find it.
+sudo -u kopds env RCLONE_CONFIG=/var/lib/kopds/rclone.conf rclone config
+
+# Create the mount point owned by the kopds user.
+# Running the mount as kopds means --allow-other is not needed.
+sudo mkdir -p /srv/calibre/library
+sudo chown kopds:kopds /srv/calibre/library
+
+# Install the unit, set your remote name, then enable it.
+sudo cp deploy/systemd/kopds-library.service /etc/systemd/system/
+sudo nano /etc/systemd/system/kopds-library.service   # replace mystorage:calibre
+sudo systemctl daemon-reload
+sudo systemctl enable --now kopds-library
+sudo systemctl status kopds-library   # should show "active (running)"
+```
+
+`Before=kopds.service` enforces ordering only when both units activate together (e.g. at boot). To make `systemctl start kopds` always bring up the mount first when started manually, add these two lines to the `[Unit]` section of your `/etc/systemd/system/kopds.service`:
+
+```ini
+Wants=kopds-library.service
+After=kopds-library.service
+```
+
 ---
 
 ## 🛡 Hardening & Operations

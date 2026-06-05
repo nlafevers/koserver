@@ -1,0 +1,53 @@
+# /etc/systemd/system/kopds-library.service
+#
+# Mounts a remote Calibre library over FUSE with rclone so KOPDS can read it.
+# This service starts before kopds.service; enabling it at the multi-user
+# target ensures the mount is ready at every boot.
+#
+# Prerequisites:
+#   1. rclone installed: https://rclone.org/install/
+#   2. rclone configured as the kopds user (see ExecStart note below):
+#        sudo -u kopds env RCLONE_CONFIG=/var/lib/kopds/rclone.conf rclone config
+#   3. Because the mount user (kopds) and the KOPDS process user (kopds) are
+#      the same, --allow-other and user_allow_other in /etc/fuse.conf are NOT
+#      needed.
+#
+# Edit the ExecStart line: replace mystorage:calibre with your remote and path.
+# Then:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now kopds-library
+
+[Unit]
+Description=rclone: KOPDS Calibre Library Mount
+Documentation=https://rclone.org/commands/rclone_mount/
+After=network-online.target
+Wants=network-online.target
+Before=kopds.service
+
+[Service]
+Type=notify
+User=kopds
+Group=kopds
+
+# Store the rclone config inside the kopds data directory so the system user
+# (which has no guaranteed home directory) can always find it.
+Environment=RCLONE_CONFIG=/var/lib/kopds/rclone.conf
+
+# Create the mount point on first run (idempotent).
+ExecStartPre=/bin/mkdir -p /srv/calibre/library
+
+# Replace mystorage:calibre with your configured rclone remote and path.
+# --vfs-cache-mode minimal caches file metadata locally; book files are
+# streamed on demand. --bwlimit 8M throttles bandwidth on a small VM to
+# avoid saturating memory during the initial KOPDS library scan — remove
+# or raise it once the first scan is complete.
+ExecStart=/usr/bin/rclone mount mystorage:calibre /srv/calibre/library \
+    --read-only \
+    --vfs-cache-mode minimal \
+    --bwlimit 8M
+
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
