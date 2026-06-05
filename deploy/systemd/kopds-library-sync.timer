@@ -1,0 +1,14 @@
+# /etc/systemd/system/kopds-library-sync.timer
+#
+# Runs kopds-library-sync.service 5 minutes after boot and every 6 hours
+# thereafter. Adjust OnUnitActiveSec to taste (e.g. 1h, 12h, 24h).
+
+[Unit]
+Description=Sync Calibre library periodically
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=6h
+
+[Install]
+WantedBy=timers.target

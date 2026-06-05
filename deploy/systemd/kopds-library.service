@@ -28,7 +28,6 @@ Before=kopds.service
 Type=notify
 User=kopds
 Group=kopds
-SupplementaryGroups=fuse
 
 # Store the rclone config inside the kopds data directory so the system user
 # (which has no guaranteed home directory) can always find it.

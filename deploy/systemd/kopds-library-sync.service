@@ -1,0 +1,39 @@
+# /etc/systemd/system/kopds-library-sync.service
+#
+# One-shot service that syncs a remote Calibre library to local disk using
+# rclone sync. Pair with kopds-library-sync.timer for periodic syncing.
+#
+# Prerequisites:
+#   1. rclone installed: https://rclone.org/install/
+#   2. rclone configured as the kopds user:
+#        sudo -u kopds env RCLONE_CONFIG=/var/lib/kopds/rclone.conf rclone config
+#   3. Local library directory created and owned by kopds:
+#        sudo mkdir -p /srv/calibre/library
+#        sudo chown kopds:kopds /srv/calibre/library
+#
+# Edit the ExecStart line: replace mystorage:calibre with your remote and path.
+# Then:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now kopds-library-sync.timer
+
+[Unit]
+Description=Sync Calibre library from remote storage
+Documentation=https://rclone.org/commands/rclone_sync/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+
+User=kopds
+Group=kopds
+
+# Store the rclone config inside the kopds data directory so the system user
+# (which has no guaranteed home directory) can always find it.
+Environment=RCLONE_CONFIG=/var/lib/kopds/rclone.conf
+
+# Replace mystorage:calibre with your configured rclone remote and path.
+# --bwlimit 8M throttles bandwidth on a small VM — remove or raise it once
+# the library is fully synced for the first time.
+ExecStart=/usr/bin/rclone sync mystorage:calibre /srv/calibre/library \
+    --bwlimit 8M

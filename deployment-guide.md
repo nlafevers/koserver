@@ -389,38 +389,55 @@ Now follow **[Part A](#-part-a--native-install-recommended)** (recommended on 1 
 
 ### KOPDS: the Calibre library on a cloud VM
 
-Your books aren't on the VM, so mount them with rclone (Go-native, handles network blips, and can be throttled to spare a small VM). After [configuring an rclone remote](https://rclone.org/docs/) for your cloud storage, mount it read-only and run KOPDS against the mount, while keeping the KOPDS index/cache on the local disk:
+Your books aren't on the VM. There are two ways to make them available to KOPDS:
 
-```bash
-rclone mount mystorage:calibre /srv/calibre/library \
-  --read-only --allow-other --vfs-cache-mode minimal \
-  --cache-dir /var/lib/kopds/rclone-cache --bwlimit 8M --daemon
-```
+| Approach | How it works | Trade-off |
+| :--- | :--- | :--- |
+| **Periodic sync** (recommended) | `rclone sync` copies the library to local disk on a schedule | Needs local disk for the full library; books are as fresh as the last sync |
+| **Live FUSE mount** (advanced) | `rclone mount` presents the remote as a local directory via FUSE | No local disk needed beyond the KOPDS index; FUSE availability and permissions vary by distribution |
 
-> **FUSE permissions (important):** if you create the mount as `root` but KOPDS runs as the `kopds` user, `kopds` cannot traverse the mount unless you pass `--allow-other` **and** uncomment `user_allow_other` in `/etc/fuse.conf`. Otherwise KOPDS gets "permission denied" reading the library. (Alternatively, run the mount as the same `kopds` user, in which case `--allow-other` isn't needed.)
+#### Option 1: Periodic sync
 
-For a permanent setup, wrap this in its own systemd service (ordered `Before=kopds.service`) so the mount is ready before KOPDS starts. Throttle with `--bwlimit` during the first scan so the metadata sync doesn't saturate a small VM's network or memory.
-
-The sample unit is in [`deploy/systemd/kopds-library.service`](deploy/systemd/kopds-library.service). Configure rclone, install the unit, and enable it:
+After [configuring an rclone remote](https://rclone.org/docs/) for your cloud storage, create the library directory and run an initial sync:
 
 ```bash
 # Configure rclone as the kopds user — stores the config inside the kopds
 # data directory so the system account can always find it.
 sudo -u kopds env RCLONE_CONFIG=/var/lib/kopds/rclone.conf rclone config
 
-# Grant the kopds user FUSE access.
-# fuse3 provides fusermount3 (setuid-root, fuse-group-executable) and
-# creates the fuse group. Without it the group won't exist and the
-# mount will fail with "Permission denied".
-sudo apt install -y fuse3
-sudo usermod -aG fuse kopds
-
-# Create the mount point owned by the kopds user.
-# Running the mount as kopds means --allow-other is not needed.
 sudo mkdir -p /srv/calibre/library
 sudo chown kopds:kopds /srv/calibre/library
 
-# Install the unit, set your remote name, then enable it.
+# Initial sync — may take a while for a large library; --bwlimit 8M
+# throttles bandwidth to spare a small VM.
+sudo -u kopds env RCLONE_CONFIG=/var/lib/kopds/rclone.conf \
+  rclone sync mystorage:calibre /srv/calibre/library --bwlimit 8M
+```
+
+For ongoing syncs, install the sample service and timer from [`deploy/systemd/`](deploy/systemd/):
+
+```bash
+sudo cp deploy/systemd/kopds-library-sync.service /etc/systemd/system/
+sudo cp deploy/systemd/kopds-library-sync.timer /etc/systemd/system/
+sudo nano /etc/systemd/system/kopds-library-sync.service   # replace mystorage:calibre
+sudo systemctl daemon-reload
+sudo systemctl enable --now kopds-library-sync.timer
+```
+
+The timer runs the sync 5 minutes after every boot and every 6 hours thereafter (adjust `OnUnitActiveSec` to taste). Set `KOPDS_LIBRARY_PATH=/srv/calibre/library` in your kopds.service unit.
+
+#### Option 2: Live FUSE mount
+
+`rclone mount` keeps books current without local disk space for book files, but requires FUSE to be accessible to a non-root system user. FUSE availability and permission setup vary by distribution and security configuration (kernel version, SELinux, AppArmor, etc.). See the [rclone mount documentation](https://rclone.org/commands/rclone_mount/) for your system before proceeding.
+
+Once FUSE is working for the `kopds` user, install the sample unit from [`deploy/systemd/kopds-library.service`](deploy/systemd/kopds-library.service):
+
+```bash
+sudo -u kopds env RCLONE_CONFIG=/var/lib/kopds/rclone.conf rclone config
+
+sudo mkdir -p /srv/calibre/library
+sudo chown kopds:kopds /srv/calibre/library
+
 sudo cp deploy/systemd/kopds-library.service /etc/systemd/system/
 sudo nano /etc/systemd/system/kopds-library.service   # replace mystorage:calibre
 sudo systemctl daemon-reload
@@ -428,7 +445,7 @@ sudo systemctl enable --now kopds-library
 sudo systemctl status kopds-library   # should show "active (running)"
 ```
 
-`Before=kopds.service` enforces ordering only when both units activate together (e.g. at boot). To make `systemctl start kopds` always bring up the mount first when started manually, add these two lines to the `[Unit]` section of your `/etc/systemd/system/kopds.service`:
+To make `systemctl start kopds` always bring up the mount first when started manually, add these two lines to the `[Unit]` section of your `/etc/systemd/system/kopds.service`:
 
 ```ini
 Wants=kopds-library.service
