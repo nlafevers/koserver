@@ -1,6 +1,6 @@
 # Deployment Sample Files
 
-Copy-paste-ready configuration referenced by [`../deployment-guide.md`](../deployment-guide.md).
+Copy-paste-ready configuration referenced by the project [`README.md`](../README.md).
 Read the guide first — these files need your real paths, hostnames, and domains before they will
 work.
 
