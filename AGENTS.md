@@ -13,6 +13,8 @@ Copy-paste-ready sample configuration (Caddyfile, combined docker-compose, syste
 ## Git
 Changes to documentation files in the KOSERVER project root must be committed to the KOSERVER repository.  Any changes to code or documentation of either KOPDS or KOSYNC must be committed to their own separate repositories.
 
+All commits in this repository and any nested repository (KOPDS, KOSYNC) must be created with the `conventional-committer` skill. Never list an agent, AI, or tool (e.g. Claude) as a co-author or in any commit trailer.
+
 ## KOPDS Project Context
 @./kopds/AGENTS.md
 
