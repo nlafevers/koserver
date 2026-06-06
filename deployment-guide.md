@@ -108,13 +108,13 @@ The apps themselves enforce strict permissions on the database (directory `0750`
 
 Both apps read their settings from environment variables. The full list lives in each app's README ([KOPDS](https://github.com/nlafevers/kopds#-configuration-reference), [KOSYNC](https://github.com/nlafevers/kosync#-configuration-reference)). For a reverse-proxied deployment the settings that matter most are:
 
-> **Use environment variables for native installs, not `config.yaml`.** Both apps also support a `config.yaml` file, but they only search the working directory at startup — which is `/` under systemd and wherever your shell is for CLI commands. Neither is a predictable place for a config file. Set everything in the `Environment=` lines of your systemd unit as shown in step A5.
-
 - `KOPDS_BASE_URL` / **public HTTPS URL** — KOPDS builds absolute links into its OPDS feeds from this, so it **must** be the public address (e.g. `https://kopds.example.com`), not `localhost`.
 - `KO*_TRUST_PROXY_HEADERS=true` — tells the app to read the real client IP from the `X-Forwarded-For` header that Caddy sets (used for rate limiting). Only safe behind a proxy; see [the security note](#why-the-app-ports-stay-private).
 - `KO*_DATABASE_PATH` — an absolute path under the data directory you created.
 
 You will set these in the systemd unit in step A5.
+
+> **Use environment variables for native installs, not `config.yaml`.** Both apps also support a `config.yaml` file, but they only search the working directory at startup — which is `/` under systemd and wherever your shell is for CLI commands. Neither is a predictable place for a config file. Set everything in the `Environment=` lines of your systemd unit as shown in step A5.
 
 ### A4. Create your first login
 
@@ -157,13 +157,14 @@ Environment=KOPDS_BASE_URL=https://kopds.example.com
 Environment=KOPDS_PORT=8080
 Environment=KOPDS_LOG_LEVEL=info
 Environment=KOPDS_TRUST_PROXY_HEADERS=true
+#Environment=KOPDS_LOG_PATH=/var/log/kopds/kopds.log
 
 # Hardening
 NoNewPrivileges=true
 ProtectSystem=full
 ProtectHome=true
 PrivateTmp=true
-ReadWritePaths=/var/lib/kopds
+ReadWritePaths=/var/lib/kopds # and /var/log/kopds if using a log file
 
 [Install]
 WantedBy=multi-user.target
@@ -565,9 +566,10 @@ A *filter* defines what a failed login attempt looks like in your logs. Both app
 [Definition]
 # Matches lines from the KOPDS HTTP middleware where a request was rejected
 # with 401 Unauthorized. <HOST> is a fail2ban placeholder that matches any
-# IPv4 or IPv6 address.
-failregex = status_code=401\b.*\bip=<HOST>
-            ip=<HOST>.*\bstatus_code=401\b
+# IPv4 or IPv6 address. Both apps log the client IP as remote_addr=IP:PORT;
+# <HOST> matches the IP portion and stops before the colon.
+failregex = status_code=401\b.*\bremote_addr=<HOST>
+            remote_addr=<HOST>.*\bstatus_code=401\b
 ignoreregex =
 ```
 
@@ -575,12 +577,10 @@ ignoreregex =
 
 ```ini
 [Definition]
-failregex = status_code=401\b.*\bip=<HOST>
-            ip=<HOST>.*\bstatus_code=401\b
+failregex = status_code=401\b.*\bremote_addr=<HOST>
+            remote_addr=<HOST>.*\bstatus_code=401\b
 ignoreregex =
 ```
-
-> **Verify the IP field name first.** Run `journalctl -u kopds | grep status_code=401 | tail -3` and look at the end of the line for the IP address field — it may be `ip=`, `addr=`, or `remote_addr=` depending on the app version. Adjust `failregex` if the field name differs.
 
 #### Create jails
 
@@ -639,7 +639,7 @@ sudo fail2ban-regex systemd-journal /etc/fail2ban/filter.d/kopds.conf \
     --journalmatch '_SYSTEMD_UNIT=kopds.service'
 ```
 
-The output shows how many log lines matched. If it shows zero but you have 401 entries in the journal, re-check the IP field name (see the tip above) and adjust `failregex`.
+The output shows how many log lines matched. If it shows zero but you have 401 entries in the journal, verify the actual log line with `journalctl -u kopds | grep status_code=401 | tail -3` and compare the field name against `failregex`.
 
 #### Unban an IP
 
