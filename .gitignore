@@ -15,9 +15,15 @@ kosync/
 .idea/
 
 # AI files
-# AGENT.md
-# GEMINI.md
-# CLAUDE.md
+AGENTS.md
+GEMINI.md
+CLAUDE.md
+project-history.md
+uniformity-plan.md
+ur2-roadmap.md
+ur3-roadmap.md
+.agents/
+.claude/
 LLAMA.md
 MISTRAL.md
 MOSS.md
