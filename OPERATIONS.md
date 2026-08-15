@@ -277,23 +277,67 @@ tailscale status | grep -i ds425
 **On tags:** a tag must be declared in the tailnet policy's `tagOwners` *before* any node
 can claim it, or `tailscale up --advertise-tags=...` fails with
 `requested tags [...] are invalid or not permitted`. Tags are optional — plain `tailscale up`
-works under a default-permissive ACL. To lock it down later:
+works under a default-permissive policy, but leaves the VM as a full tailnet peer: if it's
+compromised, the attacker reaches every host on the tailnet, not just the library.
+
+To lock it down, tag the VM `tag:kopds` and grant it exactly one destination — the NAS on
+the SFTP port. **This tailnet is on the newer `grants` syntax, not the legacy `acls`
+block, and the two cannot be mixed in one policy file** (a policy mixing them is rejected on
+save). Applied and verified 2026-08-15:
 
 ```json
 {
   "tagOwners": {
-    "tag:kopds":    ["autogroup:admin"],
-    "tag:libshare": ["autogroup:admin"]
+    "tag:kopds": ["autogroup:admin"]
   },
-  "acls": [
-    { "action": "accept", "src": ["tag:kopds"], "dst": ["tag:libshare:<ssh-port>"] }
+
+  "hosts": {
+    "nas": "<nas-tailscale-ip>"
+  },
+
+  "grants": [
+    // User-owned devices: unrestricted. autogroup:member EXCLUDES tagged
+    // nodes, so this grant does not cover the VM.
+    { "src": ["autogroup:member"], "dst": ["*"], "ip": ["*"] },
+
+    // koserver VM: SFTP to the NAS only. Nothing else, in or out.
+    { "src": ["tag:kopds"], "dst": ["nas"], "ip": ["tcp:<ssh-port>"] }
+  ],
+
+  "tests": [
+    // Refuses to save if a future edit re-broadens the VM's access.
+    { "src": "tag:kopds", "accept": ["nas:<ssh-port>"] }
   ]
 }
 ```
 
-Use your DSM SSH port, not 22. Add the rule to the existing `acls` array rather than replacing it —
-replacing cuts every other path on the tailnet. Tag the NAS from the admin console
-(Machines → ⋯ → Edit ACL tags), then `sudo tailscale up --advertise-tags=tag:kopds --force-reauth`.
+Leave the existing `ssh`, `autoApprovers`, and any other blocks untouched — merge these
+keys in, don't replace the file. The SSH policy typically uses `autogroup:self` (user-owned
+devices only); a tagged node isn't user-owned, so the VM is excluded from SSH automatically
+with no change needed.
+
+Three things that differ from the legacy `acls` syntax and are easy to get wrong:
+
+- **`"src": ["*"]` silently defeats tagging.** `*` keeps matching the VM even after it's
+  tagged, so the restriction never takes effect. The user-devices grant *must* be scoped to
+  `autogroup:member` (which excludes tagged nodes) for the tag to mean anything. This is the
+  single load-bearing change.
+- **Ports go in a separate `ip` field**, not appended to the destination as `host:port`.
+  Write `tcp:<ssh-port>` to pin the protocol as well.
+- **The `tests` block is evaluated on every save** and blocks a policy that fails it — cheap
+  insurance that a later edit can't quietly remove the VM's NAS access. Keep it to the
+  `accept` case; `deny` cases (e.g. `nas:22`) can fail on save because the test evaluates
+  policy paths, not what's actually listening.
+
+Use your DSM SFTP port, not 22. The NAS does **not** need its own tag — the grant points at
+it by host alias. Save the policy first, then on the VM
+`sudo tailscale up --advertise-tags=tag:kopds --force-reauth` and approve at the printed
+URL. Confirm the tag applied with `tailscale status --json | grep -A3 -i '"Tags"'` (a tagged
+node also renders with its FQDN rather than an owner email in `tailscale status`). Verify
+reachability with the `/dev/tcp` probes in [§8](#8-troubleshooting) — **not** `tailscale
+ping`, which probes the WireGuard layer beneath the grants filter and answers regardless of
+policy. To roll back, revert the policy in the console (it keeps version history) and run
+`sudo tailscale up --force-reauth` without the `--advertise-tags` flag.
 
 The home LAN also has a subnet router. Don't use it for this — going direct to the NAS's
 own tailnet node gives a point-to-point WireGuard path and keeps the Proxmox VM out of the
@@ -559,6 +603,27 @@ the filesystem root. List the bare remote (`rclone lsd <remote>:`) to see real p
 ```bash
 sudo systemctl restart kopds-library.service
 ```
+
+**Verifying the Tailscale grants restriction** ([§5.1](#51-tailscale-on-the-vm)) — test from
+*inside* the VM with bash's built-in `/dev/tcp`, which needs nothing installed. **Do not use
+`tailscale ping`**: it probes the disco/WireGuard layer *beneath* the packet filter that
+grants enforce, so it succeeds regardless of policy and tells you nothing about the
+restriction.
+
+```bash
+# Control: the one destination the VM is allowed → REACHABLE, instantly.
+timeout 5 bash -c 'exec 3<>/dev/tcp/<nas-tailscale-ip>/<ssh-port>' && echo REACHABLE || echo BLOCKED
+
+# Any other tailnet host/port (e.g. the Proxmox web UI) → BLOCKED, after a ~5s timeout.
+timeout 5 bash -c 'exec 3<>/dev/tcp/<pve-tailscale-ip>/8006' && echo REACHABLE || echo BLOCKED
+```
+
+A **~5s timeout** (not an instant connection refusal) is the signature of the grants
+default-deny working. If the second probe returns `REACHABLE`, the grant isn't filtering —
+most likely the tag didn't apply or the policy didn't save; re-check with
+`tailscale status --json | grep -A3 -i '"Tags"'`. Note that `tailscale status` still *lists*
+your other nodes even when the restriction is working — that's just the netmap; the grants
+block the actual connections, not the listing.
 
 **Health check after any change:**
 
