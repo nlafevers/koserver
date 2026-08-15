@@ -4,8 +4,6 @@ Operational reference for the KOPDS server running on `koserver-vm`.
 Covers how the Calibre library is mounted, how to switch between library sources,
 the AppArmor confinement it depends on, and the failure modes worth recognising.
 
-Last verified: **2026-08-15** (clean reboot, AppArmor enforcing, 593 books indexed).
-
 ---
 
 
