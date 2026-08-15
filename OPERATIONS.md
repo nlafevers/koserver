@@ -458,11 +458,41 @@ binary. Either way nothing is lost.
 | `sync_state` | mtime/size/timestamp of the last seen `metadata.db` | Yes |
 | `users` | **Accounts and passwords** | **No — not recoverable** |
 
-So never delete `kopds.db` wholesale to force a reindex; you'd wipe the logins.
+So never delete `kopds.db` wholesale to force a reindex; you'd wipe the logins. Use the
+`kopds reindex` command instead (below), which preserves `users` in every mode.
 
-**Switching libraries needs no manual reset.** The scanner compares `metadata.db` mtime and
-size against `sync_state`, and on a mismatch **replaces** rather than merges. Verified
-2026-08-15: 1011 books (shared) → 593 (personal), no stale rows, all 4 users intact.
+**Switching libraries usually needs no manual reset.** The scanner compares `metadata.db`
+mtime and size against `sync_state`, and on a mismatch **replaces** rather than merges.
+Verified 2026-08-15: 1011 books (shared) → 593 (personal), no stale book rows, all 4 users
+intact.
+
+**But the incremental read is threshold-gated, and a swap can leave the index dirty:**
+
+- The scanner only re-reads books whose Calibre `last_modified` is newer than the last
+  sync's stored timestamp. If the *new* library's books carry older timestamps (common for
+  an established library), they are never inserted — leaving a partial or near-empty
+  catalogue even though a sync "ran".
+- Older binaries pruned book rows on a swap but did **not** garbage-collect the `authors`,
+  `tags`, and `series` rows left behind, so the OPDS feed served entries from the previous
+  library that resolved to nothing. The current binary GCs those orphans during prune.
+
+When a swap leaves the catalogue stale, partial, or showing old authors/tags/series, force
+a clean rebuild with `reindex` (below) rather than trusting the incremental sync.
+
+**Forcing a full re-index** (requires the updated binary — a build carrying the `reindex`
+subcommand). Stop the server first so it isn't racing the background worker:
+
+```bash
+sudo systemctl stop kopds
+sudo -u kopds env KOPDS_DATABASE_PATH=/var/lib/kopds/kopds.db \
+  KOPDS_LIBRARY_PATH=/srv/calibre/library /opt/kopds/kopds reindex
+sudo systemctl start kopds
+```
+
+`reindex` clears `sync_state` and runs one full sync — re-reading every book, pruning what's
+gone, and GCing orphaned authors/tags/series — while preserving `users`. Add `--purge` to
+empty the derived tables first (corrupt-index recovery) or `--vacuum` to reclaim disk after
+a large prune. Watch it with `journalctl -u kopds -f`.
 
 Check state:
 
@@ -486,7 +516,7 @@ sudo systemctl stop kopds && sudo rm -rf /var/lib/kopds/cache/* && sudo systemct
 
 Startup logs `Loaded existing image cache entries count=N` — expect `0` after clearing.
 
-**User management** (the binary has no other subcommands, and no reindex command):
+**User management** (besides these and `reindex` above, the binary has no other subcommands):
 
 ```bash
 /opt/kopds/kopds create-user <username>
@@ -504,6 +534,10 @@ then `systemctl status kopds-library`.
 
 **`error code: 1033: 530`** → Cloudflare tunnel down at the origin. Only affects the
 dormant `shared-calibre` remote. Nothing to fix on this VM. See [§4.2](#42-shared-library--nextcloud-over-webdav-dormant).
+
+**Catalogue stale, partial, or listing old authors/tags/series after a library switch** →
+the incremental scan is threshold-gated and doesn't always fully rebuild across a swap.
+Force a clean rebuild with `kopds reindex`. See [§7](#7-index-and-users).
 
 **`Permission denied` listing the mount, even as root** → expected. FUSE mounts are private
 to the mounting user. Use `sudo -u kopds ls ...`.
