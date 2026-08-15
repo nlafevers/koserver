@@ -802,6 +802,12 @@ User management is built into each binary. The subcommands are identical for KOP
 - **Password Change (interactive)**: `./<app> change-password <user>`
 - **Password Change (stdin)**: `echo "<password>" | ./<app> change-password <user> --password-stdin`
 
+KOPDS adds one more subcommand for forcing a full rebuild of its Calibre index (KOSYNC has no derived index, so it has no equivalent). It always preserves user accounts; stop the service before running it.
+
+- **Reindex (KOPDS only)**: `./kopds reindex`
+- **Reindex, clearing a corrupt index first**: `./kopds reindex --purge`
+- **Reindex and reclaim disk space**: `./kopds reindex --vacuum`
+
 ### HTTP
 
 Use these `curl` commands to exercise the servers directly (against the local app ports, before the proxy).
