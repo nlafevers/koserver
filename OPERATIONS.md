@@ -1,14 +1,15 @@
 # koserver — Operations Guide
 
-Operational reference for the KOPDS server running on `koserver-vm`.
+Operational reference for the KOPDS server running on `<vm-name>`.
 Covers how the Calibre library is mounted, how to switch between library sources,
 the AppArmor confinement it depends on, and the failure modes worth recognising.
 
 ---
 
 
-> Host names, usernames, ports and project IDs in this document are placeholders in angle
-> brackets. Substitute your own; nothing here is environment-specific beyond those.
+> Everything specific to a particular deployment is a placeholder in angle brackets — host
+> names, usernames, ports, project and zone IDs, share and directory names, rclone remote
+> names. Substitute your own; nothing here is environment-specific beyond those.
 
 ---
 
@@ -23,7 +24,7 @@ the AppArmor confinement it depends on, and the failure modes worth recognising.
   - [4.3 Switching between them](#43-switching-between-them)
 - [5. Build Procedures](#5-build-procedures)
   - [5.1 Tailscale on the VM](#51-tailscale-on-the-vm)
-  - [5.2 SSH key to the NAS](#52-ssh-key-to-the-nas)
+  - [5.2 NAS service account and SSH key](#52-nas-service-account-and-ssh-key)
   - [5.3 Creating the rclone remote](#53-creating-the-rclone-remote)
   - [5.4 Repointing the mount](#54-repointing-the-mount)
 - [6. AppArmor](#6-apparmor)
@@ -36,7 +37,7 @@ the AppArmor confinement it depends on, and the failure modes worth recognising.
 
 ## 1. Overview
 
-`koserver-vm` is a GCP **e2-micro** (free tier, `us-east1-b`, project `<your-gcp-project>`)
+`<vm-name>` is a GCP **e2-micro** (free tier, `<zone>`, project `<your-gcp-project>`)
 running Ubuntu 26.04 LTS. It serves an OPDS feed to KOReader clients.
 
 The library itself is **not stored on the VM** — the free tier's 30GB disk can't hold it.
@@ -48,7 +49,7 @@ small SQLite index locally.
          │  OPDS / HTTPS
          ▼
    ┌─────────────────────────────────────────────┐
-   │ koserver-vm (GCP e2-micro)                  │
+   │ <vm-name> (GCP e2-micro)                  │
    │                                             │
    │  kopds.service ──── kopds.db (local index)  │
    │       │                                     │
@@ -60,8 +61,8 @@ small SQLite index locally.
                     │ Tailscale (WireGuard)
                     │ SFTP
                     ▼
-          <nas-host> (DS425+, home LAN)
-          /volume2/content-text/<library-dir>
+          <nas-host> (Synology NAS, home LAN)
+          /volume<N>/<library-share>/<library-dir>
 ```
 
 **Why the mount is load-bearing:** kopds copies *metadata* into `kopds.db` at scan time,
@@ -87,6 +88,7 @@ minutes — nearly free over a WAN link. Only a change triggers a full read.
 | rclone VFS cache | `/var/lib/kopds/rclone-cache/` |
 | rclone config | `/var/lib/kopds/rclone.conf` |
 | SSH key (to NAS) | `/var/lib/kopds/.ssh/id_ed25519` |
+| NAS account | `<dsm-user>` — read-only on the library share, no interactive shell |
 | Sync interval | 30m |
 | Storage cap | 2000 MB |
 
@@ -126,14 +128,14 @@ sudo -u kopds RCLONE_CONFIG=/var/lib/kopds/rclone.conf rclone listremotes
 ## 3. Getting In
 
 ```bash
-gcloud compute ssh koserver-vm --tunnel-through-iap
+gcloud compute ssh <vm-name> --tunnel-through-iap
 ```
 
 Full form if the defaults aren't set:
 
 ```bash
-gcloud compute ssh koserver-vm \
-  --project=<your-gcp-project> --zone=us-east1-b --tunnel-through-iap
+gcloud compute ssh <vm-name> \
+  --project=<your-gcp-project> --zone=<zone> --tunnel-through-iap
 ```
 
 The IAP tunnel drops on reboot with a `ConnectionCreationError` / broken pipe traceback.
@@ -148,8 +150,8 @@ Both rclone remotes are defined; only one is mounted at a time. The mountpoint s
 
 | Remote | Type | Source | Status |
 |---|---|---|---|
-| `gcp-e2micro-vm-koserver-calibre` | sftp | DS425+ over Tailscale | **Active** |
-| `shared-calibre` | webdav | Nextcloud shared library | Dormant — origin offline |
+| `<nas-remote>` | sftp | Synology NAS over Tailscale | **Active** |
+| `<shared-remote>` | webdav | Nextcloud shared library | Dormant — origin offline |
 
 ### 4.1 Personal library — NAS over Tailscale + SFTP (active)
 
@@ -161,26 +163,32 @@ and rclone handles reconnects and bandwidth throttling on top of it.
 
 | Parameter | Value |
 |---|---|
-| Tailscale host | `<nas-host>` () |
+| Tailscale host | `<nas-host>` |
 | SSH/SFTP port | non-default (DSM was moved off 22) |
-| DSM user | `<dsm-user>` |
-| Auth | ed25519 key, no passphrase |
-| rclone path | `content-text/<library-dir>` |
-| Real NAS path | `/volume2/content-text/<library-dir>` |
+| DSM user | `<dsm-user>` — dedicated service account, not a general-purpose login |
+| Account scope | read-only on `<library-share>`; no other share visible; no interactive shell |
+| Auth | ed25519 key, no passphrase, authorized on that account only |
+| rclone path | `<library-share>/<library-dir>` |
+| Real NAS path | `/volume<N>/<library-share>/<library-dir>` |
+
+**Credential scope is the security boundary here.** The key on the VM is passwordless, so
+the blast radius of a compromised VM is exactly whatever that key can reach. Scoping the
+DSM account to read-only on one share means the answer is "the books" and nothing else —
+see [§5.2](#52-nas-service-account-and-ssh-key).
 
 **The path is not the filesystem path.** Synology's SFTP root presents *shares* flattened
-across volumes, so there is no `/volume2` prefix. Listing the bare remote shows what's
+across volumes, so there is no `/volume<N>` prefix. Listing the bare remote shows what's
 actually addressable:
 
 ```bash
 sudo -u kopds RCLONE_CONFIG=/var/lib/kopds/rclone.conf \
-  rclone lsd gcp-e2micro-vm-koserver-calibre:
+  rclone lsd <nas-remote>:
 ```
 
 **Active ExecStart** (in the drop-in):
 
 ```
-/usr/bin/rclone mount gcp-e2micro-vm-koserver-calibre:content-text/<library-dir> \
+/usr/bin/rclone mount <nas-remote>:<library-share>/<library-dir> \
   /srv/calibre/library --read-only --vfs-cache-mode full --vfs-cache-max-size 2G \
   --dir-cache-time 10m --cache-dir /var/lib/kopds/rclone-cache --bwlimit 8M
 ```
@@ -199,7 +207,7 @@ Flag notes:
 
 ### 4.2 Shared library — Nextcloud over WebDAV (dormant)
 
-The original source: `shared-calibre:Books/Shared_Calibre`, reached over WebDAV through a
+The original source: `<shared-remote>:<shared-library-path>`, reached over WebDAV through a
 Cloudflare tunnel. The origin went offline and is expected to stay down for some months
 from August 2026.
 
@@ -209,7 +217,7 @@ drop-in edit, not a rebuild.
 Symptom when the origin is down:
 
 ```
-Failed to create file system for "shared-calibre:Books/Shared_Calibre":
+Failed to create file system for "<shared-remote>:<shared-library-path>":
 read metadata failed: error code: 1033: 530
 ```
 
@@ -233,7 +241,7 @@ Back to the shared library — replace the `ExecStart` lines with:
 ```ini
 [Service]
 ExecStart=
-ExecStart=/usr/bin/rclone mount shared-calibre:Books/Shared_Calibre /srv/calibre/library \
+ExecStart=/usr/bin/rclone mount <shared-remote>:<shared-library-path> /srv/calibre/library \
   --read-only --vfs-cache-mode full --vfs-cache-max-size 2G --dir-cache-time 10m \
   --cache-dir /var/lib/kopds/rclone-cache --bwlimit 8M
 ```
@@ -241,15 +249,40 @@ ExecStart=/usr/bin/rclone mount shared-calibre:Books/Shared_Calibre /srv/calibre
 The empty `ExecStart=` is **required** — it clears the original before setting the new one.
 Without it systemd appends and refuses to start.
 
+The same one-line edit covers a **credential or remote-name change** — repointing at a
+renamed remote (e.g. after moving to a scoped NAS account, [§5.2](#52-nas-service-account-and-ssh-key))
+touches only the remote name in `ExecStart`. The mountpoint, every mount flag, the library
+path within the remote, and the dormant `<shared-remote>` remote all stay as they are. And
+because the mountpoint doesn't move, the AppArmor override needs no change either — see
+[§6](#6-apparmor), where that path-specificity is the whole point.
+
+Verify in this order:
+
 ```bash
+# 1. Config resolves and the remote can actually list the library.
+sudo -u kopds RCLONE_CONFIG=/var/lib/kopds/rclone.conf rclone config show <remote>
+sudo -u kopds RCLONE_CONFIG=/var/lib/kopds/rclone.conf \
+  rclone lsd <remote>:<library-path> | tail -5
+
 sudo systemctl daemon-reload
 
-# Verify the merge produced exactly ONE ExecStart line
+# 2. Verify the merge produced exactly ONE ExecStart line
 systemctl show kopds-library.service -p ExecStart | tr ';' '\n' | grep -i argv
 
 sudo systemctl restart kopds-library.service
+
+# 3. Mount exists...
 findmnt /srv/calibre/library
+
+# 4. ...and is serving the right data.
+sudo -u kopds ls -l /srv/calibre/library/metadata.db
+sudo -u kopds ls "/srv/calibre/library/<some-author>/"
 ```
+
+**Steps 3 and 4 are not the same check.** `findmnt` succeeding proves only that a FUSE
+mount exists at that path — it says nothing about what's behind it. A wrong path, a wrong
+remote, or a half-dead session can all present a mount that lists nothing. Confirm
+`metadata.db` has a plausible size and read an actual author directory.
 
 Then let kopds re-index (see [§7](#7-index-and-users)).
 
@@ -271,7 +304,7 @@ Reference for rebuilding from scratch. Skip if the system is working.
 ```bash
 curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up
-tailscale status | grep -i ds425
+tailscale status | grep -i <nas-host>
 ```
 
 **On tags:** a tag must be declared in the tailnet policy's `tagOwners` *before* any node
@@ -340,19 +373,57 @@ policy. To roll back, revert the policy in the console (it keeps version history
 `sudo tailscale up --force-reauth` without the `--advertise-tags` flag.
 
 The home LAN also has a subnet router. Don't use it for this — going direct to the NAS's
-own tailnet node gives a point-to-point WireGuard path and keeps the Proxmox VM out of the
+own tailnet node gives a point-to-point WireGuard path and keeps the subnet router out of the
 data path for every book download.
 
-### 5.2 SSH key to the NAS
+### 5.2 NAS service account and SSH key
+
+The VM holds a passwordless key. Whatever that key can reach is what an attacker who owns
+the VM can reach, so the account it authorizes should be able to do exactly one thing:
+read the library share. Do **not** reuse a general-purpose or administrator account.
 
 DSM prerequisites (all in Control Panel):
 
 - **Terminal & SNMP → Terminal** → Enable SSH service (note the port)
 - **File Services → FTP → SFTP** → Enable SFTP (same sshd, same port)
 - **User & Group → Advanced** → Enable user home service — without a home there's
-  nowhere for `authorized_keys` to live and key auth silently fails
+  nowhere for `authorized_keys` to live and key auth silently fails. This must be on
+  *before* you create the account, so the home is provisioned with it.
 
-Generate on the VM as the service user:
+#### Create the service account
+
+**Control Panel → User & Group → Create**, then through the wizard:
+
+| Page | What to set |
+|---|---|
+| User info | Name, optional description, password. Uncheck the notification mail; leave email blank |
+| Join groups | Leave at the default — **do not** add `administrators` |
+| Assign shared folder permissions | **Read-only** on the library share (`<library-share>`). Leave every other share at No access |
+| User quota | `Homes` can't be set to No access, so cap it — 1 GB is plenty for an `authorized_keys` file |
+| Application permissions | **Deny all**, then allow **FTP** and **SFTP** only |
+
+Staying out of `administrators` is what denies the account an interactive shell (see
+below). The read-only permission on the share is what makes the restriction real —
+`--read-only` on the rclone mount is a client-side flag and protects nothing on its own.
+
+**Acceptance criteria.** Run these once the key is installed and the rclone remote exists
+([§5.3](#53-creating-the-rclone-remote)) — they are what "correctly scoped" actually means:
+
+```bash
+# 1. Only the library share and the account's own home should be visible.
+sudo -u kopds RCLONE_CONFIG=/var/lib/kopds/rclone.conf rclone lsd <nas-remote>:
+
+# 2. Writes must be refused by the NAS, not just by rclone.
+sudo -u kopds RCLONE_CONFIG=/var/lib/kopds/rclone.conf \
+  rclone mkdir <nas-remote>:<library-share>/write-test
+```
+
+Expect exactly two entries from the first (`<library-share>` and `home`) and
+`Permission denied` from the second. For contrast, a general-purpose account sees every
+share on the NAS — backups, sync targets, and the other content shares included. That gap
+is the entire point of the exercise.
+
+#### Generate the key on the VM
 
 ```bash
 sudo -u kopds mkdir -p /var/lib/kopds/.ssh && sudo -u kopds chmod 700 /var/lib/kopds/.ssh
@@ -360,31 +431,89 @@ sudo -u kopds ssh-keygen -t ed25519 -f /var/lib/kopds/.ssh/id_ed25519 -N ""
 sudo cat /var/lib/kopds/.ssh/id_ed25519.pub
 ```
 
-Install **on the NAS** (public key goes on the machine you connect *to*):
+#### Install the public key on the NAS
+
+The service account has no shell, so you can't log in as it to write its own
+`authorized_keys`. Do it from a **separate DSM admin session**, then hand ownership over:
 
 ```bash
-ssh -p <ssh-port> <dsm-user>@<nas-host>
-mkdir -p ~/.ssh
-cat >> ~/.ssh/authorized_keys     # paste key, Enter, Ctrl-D
-chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys && chmod 755 ~
-exit
+ssh -p <ssh-port> <dsm-admin>@<nas-host>
+
+sudo mkdir -p /var/services/homes/<dsm-user>/.ssh
+sudo tee /var/services/homes/<dsm-user>/.ssh/authorized_keys > /dev/null
+# paste the public key, Enter, Ctrl-D
+
+sudo chown -R <dsm-user>:users /var/services/homes/<dsm-user>/.ssh
+sudo chmod 700 /var/services/homes/<dsm-user>/.ssh
+sudo chmod 600 /var/services/homes/<dsm-user>/.ssh/authorized_keys
 ```
 
-Those three `chmod`s are the most common reason DSM key auth fails. Home must not be
-group-writable.
+Three things differ from the usual key-install procedure:
 
-Verify — should not prompt for a password:
+- **The `chown` is mandatory and easy to forget.** sshd refuses an `authorized_keys` file
+  the authenticating user does not own, and the file is created as root here.
+- **`ssh-copy-id` will not work** — it needs a shell on the target.
+- **Do not `chmod 755` the home.** DSM creates it `711`, which sshd accepts; the
+  requirement is that the home not be group- or world-writable, not that it be `755`.
+
+#### Verify with `sftp`, not `ssh`
 
 ```bash
-sudo -u kopds ssh -i /var/lib/kopds/.ssh/id_ed25519 -p <ssh-port> <dsm-user>@<nas-host> 'echo KEYAUTH_OK'
+sudo -u kopds sftp -i /var/lib/kopds/.ssh/id_ed25519 -P <ssh-port> <dsm-user>@<nas-host>
+# at the sftp> prompt:  ls    then    quit
 ```
 
-`ssh-copy-id` is an alternative but needs a real home directory for its scratch dir.
+> **`ssh <dsm-user>@<nas-host> 'echo OK'` will FAIL on a correctly configured account, and
+> this looks exactly like a broken setup.** Key auth succeeds — DSM's login banner prints,
+> which only happens post-authentication — and *then* you get
+> `Permission denied, please try again.` SFTP with the same key works fine.
+>
+> The mechanism is DSM's default group behaviour: an interactive shell is restricted to
+> members of `administrators`, while the SFTP subsystem stays available to any account
+> granted SFTP. Nothing was configured to produce this — no `rssh`, no chroot, no
+> sftp-only group, and DSM's SFTP chroot setting was left alone. **Treat it as observed
+> behaviour, not a guarantee**, and re-verify on your own DSM version rather than
+> assuming it. Note that this is *not* a chroot: the account is confined by share
+> permissions, not by a jail.
 
-> **Use a dedicated DSM account.** Create a user with read-only permission on the library
-> share only, rather than reusing a general-purpose account. The key is passwordless and
-> lives on a cloud VM, so scoping it tightly means a compromise of the VM yields nothing
-> beyond read access to the books — which matches what the `--read-only` mount needs anyway.
+#### Revoke the old key
+
+If the VM previously authenticated as a broader account, remove its key from that
+account's `authorized_keys`. The file usually holds unrelated keys (a workstation, say),
+so filter by the key comment rather than deleting the file:
+
+```bash
+ssh -p <ssh-port> <dsm-admin>@<nas-host>
+grep -v '<vm-key-comment>' ~/.ssh/authorized_keys > /tmp/ak.new \
+  && mv /tmp/ak.new ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+cat ~/.ssh/authorized_keys
+```
+
+Keep that admin session **open** until you've verified — a slip here can lock you out.
+
+> **A plain `ssh -i <key> <olduser>@<nas-host>` does not prove revocation.** DSM offers
+> password auth as a fallback, so the command prompts for a password and, if you supply
+> one, succeeds — which reads as a failed revocation when it isn't. Disable the fallback:
+>
+> ```bash
+> ssh -o PasswordAuthentication=no -o BatchMode=yes \
+>   -i /var/lib/kopds/.ssh/id_ed25519 -p <ssh-port> \
+>   <olduser>@<nas-host> 'echo SHOULD_FAIL'
+> ```
+>
+> Expect `Permission denied (publickey,password)` with no prompt.
+
+Two follow-ups worth doing deliberately:
+
+- **This is a privilege reduction, not a key rotation.** If you reused the existing
+  keypair, the same key material still authenticates — only the account it authorizes
+  changed. Key exposure is unchanged. True rotation is a separate step: generate a new
+  keypair, install it, repoint `key_file` in `rclone.conf`, then revoke the old one.
+- **Remove superseded private keys from the VM.** If a key was renamed or replaced during
+  the work, the old file can linger in `/var/lib/kopds/.ssh/`. Check with
+  `sudo ls -l /var/lib/kopds/.ssh/` and delete anything no longer referenced by
+  `rclone.conf`.
 
 ### 5.3 Creating the rclone remote
 
@@ -409,11 +538,23 @@ sudo -u kopds RCLONE_CONFIG=/var/lib/kopds/rclone.conf rclone config
 | `disable_hashcheck` | `false` |
 | advanced config | `n` |
 
+The resulting stanza carries three fields you never typed:
+
+```ini
+shell_type = unix
+md5sum_command = md5sum
+sha1sum_command = sha1sum
+```
+
+rclone probes the remote for hash support during config and writes these itself — **it
+does so even though the account has no interactive shell.** Harmless, but confusing if
+you're diffing a config against this table and wondering where they came from.
+
 Test before touching systemd:
 
 ```bash
 sudo -u kopds RCLONE_CONFIG=/var/lib/kopds/rclone.conf \
-  rclone lsd gcp-e2micro-vm-koserver-calibre:content-text/<library-dir>
+  rclone lsd <nas-remote>:<library-share>/<library-dir>
 ```
 
 ### 5.4 Repointing the mount
@@ -445,6 +586,10 @@ capability dac_override,
 
 This file is the load-bearing piece and is **path-specific**. Moving the mountpoint
 requires updating it in the same change, or the mount fails with a non-obvious cause.
+
+The converse is just as useful: changes that *don't* move the mountpoint need nothing here.
+Swapping the NAS credential and renaming the rclone remote ([§5.2](#52-nas-service-account-and-ssh-key))
+left this override untouched, because the profile keys on the path, not on what's mounted there.
 
 Distro profiles carry `include if exists <local/fusermount3>`, so the override survives
 package upgrades and the shipped conffile stays pristine — no more dpkg conffile prompts.
@@ -577,7 +722,7 @@ Startup logs `Loaded existing image cache entries count=N` — expect `0` after 
 then `systemctl status kopds-library`.
 
 **`error code: 1033: 530`** → Cloudflare tunnel down at the origin. Only affects the
-dormant `shared-calibre` remote. Nothing to fix on this VM. See [§4.2](#42-shared-library--nextcloud-over-webdav-dormant).
+dormant `<shared-remote>` remote. Nothing to fix on this VM. See [§4.2](#42-shared-library--nextcloud-over-webdav-dormant).
 
 **Catalogue stale, partial, or listing old authors/tags/series after a library switch** →
 the incremental scan is threshold-gated and doesn't always fully rebuild across a swap.
@@ -598,6 +743,15 @@ read root's config. Pass `RCLONE_CONFIG=/var/lib/kopds/rclone.conf` explicitly.
 **`directory not found` from `rclone lsd`** → SFTP paths are relative to the share root, not
 the filesystem root. List the bare remote (`rclone lsd <remote>:`) to see real paths.
 
+**`ssh <dsm-user>@<nas-host>` gives `Permission denied` but SFTP works** → expected, not
+broken. The service account is deliberately non-admin on DSM, which denies an interactive
+shell while leaving SFTP available. The banner printing before the denial means key auth
+already succeeded. Verify with `sftp`, never `ssh`. See [§5.2](#52-nas-service-account-and-ssh-key).
+
+**A revoked key still connects** → you're hitting DSM's password-auth fallback, not a
+failed revocation. Re-test with `-o PasswordAuthentication=no -o BatchMode=yes` and expect
+`Permission denied (publickey,password)` with no prompt. See [§5.2](#52-nas-service-account-and-ssh-key).
+
 **Reconnecting to the NAS** — a mount restart forces a fresh SFTP session:
 
 ```bash
@@ -614,8 +768,9 @@ restriction.
 # Control: the one destination the VM is allowed → REACHABLE, instantly.
 timeout 5 bash -c 'exec 3<>/dev/tcp/<nas-tailscale-ip>/<ssh-port>' && echo REACHABLE || echo BLOCKED
 
-# Any other tailnet host/port (e.g. the Proxmox web UI) → BLOCKED, after a ~5s timeout.
-timeout 5 bash -c 'exec 3<>/dev/tcp/<pve-tailscale-ip>/8006' && echo REACHABLE || echo BLOCKED
+# Any other tailnet host/port (pick a peer with a known open port) → BLOCKED,
+# after a ~5s timeout.
+timeout 5 bash -c 'exec 3<>/dev/tcp/<other-tailnet-ip>/<other-port>' && echo REACHABLE || echo BLOCKED
 ```
 
 A **~5s timeout** (not an instant connection refusal) is the signature of the grants
@@ -638,7 +793,7 @@ sudo journalctl -k -b | grep -i 'apparmor.*DENIED'
 
 ## 9. Gotchas
 
-Things that cost time on 2026-08-14.
+Things that cost time during the build and the later credential hardening.
 
 **`sudo cat > /path/file` doesn't work.** The redirect is performed by *your* shell before
 `sudo` runs, so the write happens as your user. Use:
@@ -662,9 +817,18 @@ binary directly rather than going through a login shell.
 mounting user unless `--allow-other` is set.
 
 **Synology SFTP paths ≠ filesystem paths.** Shares appear flattened at the SFTP root with
-no `/volume1`/`/volume2` prefix.
+no `/volumeN` prefix.
 
 **DSM's SSH port may be moved off 22**, and SFTP shares it — one setting covers both.
+
+**A non-admin DSM account gets SFTP but no shell.** That's the desired end state for a
+service account, but it breaks the reflexive `ssh <user>@<host> 'echo OK'` verification and
+makes `ssh-copy-id` unusable — it needs a shell to write `authorized_keys`. Install the key
+from an admin session and `chown` it to the service account afterwards
+([§5.2](#52-nas-service-account-and-ssh-key)).
+
+**Synology homes live under `/var/services/homes/<user>`**, not `/home/<user>`, and DSM
+creates them mode `711` — which sshd accepts. Don't "fix" that to `755`.
 
 **The post-quantum key exchange warning** on SSH to the NAS is DSM shipping an older
 OpenSSH. Irrelevant inside a WireGuard tunnel.
@@ -699,5 +863,5 @@ free tier's ~1GB/month. EPUBs are negligible; heavy PDF sessions are not.
 exactly the torn-read protection `--vfs-cache-mode full` is there to provide.
 
 **When the shared library returns:** edit the drop-in ([§4.3](#43-switching-between-them)),
-`daemon-reload`, restart, let the scanner re-index. The `shared-calibre` remote needs no
+`daemon-reload`, restart, let the scanner re-index. The `<shared-remote>` remote needs no
 changes.
